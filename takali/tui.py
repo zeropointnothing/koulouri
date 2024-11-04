@@ -76,14 +76,15 @@ class Window:
                 if not selected_song:
                     continue
 
-
                 # progress bar / now playing
-                prog_bar = "="*round(self.w*((self.player.mixer.get_pos()/1000)/song_len))
+                now_at = self.player.mixer.get_pos()/1000
+                prog_bar = "="*round((self.w-13)*((now_at)/song_len))
                 now_playing = f"{selected_song["artist"]} - {selected_song["title"]}, [{self.__mode.upper()}]"
                 nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                 # prog_bar = self.player.mixer.get_pos()/1000
                 try:
-                    self.stdscr.addstr(self.h-1, 0, f"{prog_bar}")
+                    final_prog = f"{round(now_at/60):02d}:{round(now_at%60):02d}-{round(song_len/60):02d}:{round(song_len%60):02d} >{prog_bar}"
+                    self.stdscr.addstr(self.h-1, 0, final_prog)
                     self.stdscr.clrtoeol()
                 except:
                     selected_song = None
