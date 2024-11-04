@@ -68,7 +68,7 @@ class Window:
                     except:
                         sleep(0.005)
                         continue
-                elif k in range(48, 57):
+                elif k in range(48, 58):
                     self.__user_inp += chr(k)
                 elif k == -1:
                     pass
