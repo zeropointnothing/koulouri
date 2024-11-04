@@ -57,7 +57,7 @@ class Window:
                         k = int(self.__user_inp)
                         self.__index = k
                         self.__user_inp = ""
-                        if k in range(len(self.songs)-1):
+                        if k in range(len(self.songs)):
 
                             selected_song = self.songs[self.__index]
                             self.player.stop() # ensure that we stop anything currently playing
