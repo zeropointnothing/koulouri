@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--play", help="Play a song, artist, or albumb.", type=int)
 parser.add_argument("-l", "--list", help="List all available songs, albums, or artists.", action="store_true")
 parser.add_argument("-r", "--refresh", help="Refresh Takali's song cache.", action="store_true")
+parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instead.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
 
 def assemble_songs(dir):
@@ -37,7 +38,7 @@ def generate_cache(dir):
 
     plr.exit()
 
-def fetch_cache():
+def fetch_cache() -> dict:
     if not os.path.exists("songcache.json"):
         print("fetching metadata...")
         generate_cache("/home/exii/Music")
@@ -49,7 +50,16 @@ def fetch_cache():
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    if args.play != None:
+    if args.curses:
+        from tui import Window
+        import curses
+
+        stdscr = curses.initscr()
+        plr = Player()
+        win = Window(plr, stdscr)
+        win.main()
+
+    elif args.play != None:
         print("fetching media...")
         # songs = assemble_songs("/home/exii/Music")
         # songs = sorted(songs, key=lambda d: d["track"])

@@ -32,7 +32,7 @@ class Player:
         """
         tmp = NamedTemporaryFile(prefix="takali-conv_") # create a temp file to write the conversion to
         self.__file = tmp
-        print(tmp.name)
+        # print(tmp.name)
 
         audio = pydub.AudioSegment.from_file(path, input_format)
         info = self.get_info(path, input_format)
