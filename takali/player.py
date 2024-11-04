@@ -29,7 +29,7 @@ class Player:
 
         Returns song information.
         """
-        tmp = NamedTemporaryFile() # create a temp file to write the conversion to
+        tmp = NamedTemporaryFile(prefix="takali-conv_") # create a temp file to write the conversion to
         self.__file = tmp
         print(tmp.name)
 
