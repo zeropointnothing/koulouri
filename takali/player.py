@@ -1,6 +1,7 @@
 import pydub
 import pydub.utils
 from pygame import mixer
+from pygame import error as pyerr
 from tempfile import NamedTemporaryFile
 from time import sleep
 
@@ -105,6 +106,13 @@ class Player:
         """
         self.mixer.unpause()
         self.__playing = True
+
+    def seek(self, to: int):
+        try:
+            self.mixer.set_pos(to)
+            return True
+        except pyerr:
+            return False
 
     def change_volume(self, by: int):
         new_vol = self.mixer.get_volume()+(by/100)

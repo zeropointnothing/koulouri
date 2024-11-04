@@ -71,6 +71,9 @@ if __name__ == "__main__":
 
                     if user_inp.lower() == "q":
                         raise KeyboardInterrupt("user abort")
+                    elif user_inp.lower().startswith("seek"):
+                        cmd, to = user_inp.split(" ")
+                        plr.seek(int(to))
                     elif user_inp.lower() == "p":
                         plr.pause()
                         paused = True
@@ -112,6 +115,9 @@ if __name__ == "__main__":
 
                         if user_inp.lower() == "q":
                             raise KeyboardInterrupt("user abort")
+                        elif user_inp.lower().startswith("seek"):
+                            cmd, to = user_inp.split(" ")
+                            plr.seek(int(to))
                         elif user_inp.lower() == "s":
                             break
                         elif user_inp.lower() == "p":
