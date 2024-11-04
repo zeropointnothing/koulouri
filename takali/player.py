@@ -69,9 +69,10 @@ class Player:
             title = tags.get("title", None)
             track = int(tags.get("track", 0))
             genre = None
-            
 
-        return {"path": path, "type": type, "artist": artist, "album_artist": album_artist, "album": album, "title": title, "genre": genre, "track": track}
+        duration = audio_info.get("duration", 0) # should exist in all formats            
+
+        return {"path": path, "type": type, "duration": duration, "artist": artist, "album_artist": album_artist, "album": album, "title": title, "genre": genre, "track": track}
     
     def stop(self):
         """
