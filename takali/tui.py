@@ -20,6 +20,7 @@ class Window:
     def main(self):
         self.stdscr.nodelay(True)
         curses.noecho()
+        self.stdscr.keypad(True)
         song_meta = fetch_cache()
         self.songs = sorted(song_meta, key=lambda d: d["album"])
         selected_song = None
@@ -30,8 +31,8 @@ class Window:
                 k = self.stdscr.getch() # to reload xy
                 self.h, self.w = self.stdscr.getmaxyx()
 
-                for i, song in enumerate(self.songs[self.__offset:self.h-3]):
-                    entry = f"{i}: {song["artist"]} - {song["title"]}"
+                for i, song in enumerate(self.songs[self.__offset:self.__offset+self.h-3]):
+                    entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
                     entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
                     self.stdscr.addstr(i, 0, entry_trimmed)
                     self.stdscr.clrtoeol()
@@ -43,6 +44,14 @@ class Window:
 
                 if k in [curses.KEY_BACKSPACE, 127]:
                     self.__user_inp = self.__user_inp[:len(self.__user_inp)-1]
+                elif k == curses.KEY_DOWN:
+                    self.__offset += 1
+                    self.__offset %= (len(self.songs))
+                    self.stdscr.clear()
+                elif k == curses.KEY_UP:
+                    self.__offset -= 1
+                    self.__offset %= (len(self.songs))
+                    self.stdscr.clear()
                 elif k in [curses.KEY_ENTER, 10, 13]:
                     try:
                         k = int(self.__user_inp)
@@ -59,10 +68,10 @@ class Window:
                     except:
                         sleep(0.005)
                         continue
+                elif k in range(48, 57):
+                    self.__user_inp += chr(k)
                 elif k == -1:
                     pass
-                else:
-                    self.__user_inp += chr(k)
 
                 if not selected_song:
                     continue
@@ -75,6 +84,7 @@ class Window:
                 # prog_bar = self.player.mixer.get_pos()/1000
                 try:
                     self.stdscr.addstr(self.h-1, 0, f"{prog_bar}")
+                    self.stdscr.clrtoeol()
                 except:
                     selected_song = None
                     pass
