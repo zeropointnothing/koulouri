@@ -1,9 +1,17 @@
 # takali 
 a lightweight Python music player
 
-# commands (terminal)
+## Discord RPC
 
-## play
+Takali supports Discord RPC by default, but does not include the packages needed to make it functional.
+
+to enable RPC, run the following commands:
+- `pip install requests`
+- `pip install https://github.com/qwertyquerty/pypresence/archive/master.zip`
+
+## commands (terminal)
+
+### play
 
 `-p, --play INT`
 
@@ -11,7 +19,7 @@ plays a song from the `songcache`.
 
 if `album` is set, will play an entire album instead. (see [album](#album))
 
-## list
+### list
 
 `-l, --list`
 
@@ -21,7 +29,7 @@ if a `songcache` hasn't been created yet, it will create one to reduce fetch tim
 
 if `album` is set, display entire albums. (see [album](#album))
 
-## refresh
+### refresh
 
 `-r, --refresh`
 
@@ -29,13 +37,13 @@ manually refreshes the `songcache`.
 
 scans known media locations and assembles a list of song metadata. the results will be saved in a file name `songcache.json` for further use.
 
-## album
+### album
 
 `--album`
 
 the album flag. for commands that support it, will switch them to 'album mode'.
 
-## tui
+### tui
 
 `-c, --curses`
 
@@ -43,23 +51,23 @@ start Takali using the built in TUI, powered by the Curses library.
 
 note that curses support is only likely to work on UNIX/Linux systems, and Windows users may experience issues. thus, it is only imported when this flag is supplied.
 
-# commands (tui)
+## commands (tui)
 
 commands for Takali's build in TUI (see [tui](#tui)).
 
-## scroll up
+### scroll up
 
 `KEY_UP`
 
 scrolls the track view up one.
 
-## scroll down
+### scroll down
 
 `KEY_DOWN`
 
 scrolls the track view down one.
 
-## play
+### play
 
 `INT`
 
@@ -67,7 +75,7 @@ play the selected song.
 
 type in the track number, then press enter.
 
-# credits
+## credits
 
 takali wouldn't be possible without these projects <3:
 
@@ -75,3 +83,4 @@ takali wouldn't be possible without these projects <3:
 - [pygame](https://github.com/pygame/pygame) (audio playback) - the PyGame team
 - [ffmpeg](https://github.com/FFmpeg/FFmpeg) (the actuall wav conversion) - the FFmpeg team
 - curses (tui) - Ken Arnold, AT&T, and others
+- [pypresence](https://github.com/qwertyquerty/pypresence) (Discord RPC) - QwertyQwerty
