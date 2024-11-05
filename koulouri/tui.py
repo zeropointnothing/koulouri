@@ -84,8 +84,9 @@ class Window:
                     try:
                         # progress bar / now playing
                         now_at = self.player.mixer.get_pos()/1000
+                        volume = round(self.player.mixer.get_volume()*100)
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
-                        now_playing = f"{selected_song["artist"]} - {selected_song["title"]}, [{self.__mode.upper()}]"
+                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]} : [{volume}%]/{self.__mode.upper()}"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} >{prog_bar}"
@@ -95,6 +96,7 @@ class Window:
                         selected_song = None
                         pass
                     self.stdscr.addstr(self.h-2, 0, nplaying_trimmed)
+                    self.stdscr.clrtoeol()
 
                     self.stdscr.refresh()
         except KeyboardInterrupt:
