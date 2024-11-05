@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # hide pygame welcome
+os.chdir(os.path.dirname(__file__)) # ensure we run from the same place every time.
 from player import Player
 from time import sleep
 
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.version:
-        print(f"koulouri v{VERSION}")
+        print(f"koulouri v{VERSION} ({os.getcwd()})")
         parser.exit()
 
     if args.curses:
