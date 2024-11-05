@@ -2,7 +2,6 @@ import argparse
 import json
 import os, sys
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # hide pygame welcome
-os.chdir(os.path.dirname(os.path.abspath(sys.argv[0]))) # ensure we run from the same place every time.c
 from player import Player
 from time import sleep
 
@@ -52,6 +51,7 @@ def fetch_cache() -> dict:
 
 
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(sys.argv[0]))) # ensure we run from the same place every time.c
     args = parser.parse_args()
 
     if args.version:
