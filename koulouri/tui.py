@@ -88,7 +88,7 @@ class Window:
                         now_playing = f"{selected_song["artist"]} - {selected_song["title"]}, [{self.__mode.upper()}]"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
-                        final_prog = f"{round(now_at/60):02d}:{round(now_at%60):02d}-{round(song_len/60):02d}:{round(song_len%60):02d} >{prog_bar}"
+                        final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} >{prog_bar}"
                         self.stdscr.addstr(self.h-1, 0, final_prog)
                         self.stdscr.clrtoeol()
                     except:
