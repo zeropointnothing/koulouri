@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from time import sleep
 
 class Player:
-    def __init__(self):
+    def __init__(self, rpc = None):
         mixer.init()
         
         self.mixer = mixer.music
@@ -18,6 +18,9 @@ class Player:
         self.__playing = False # playing audio
         self.__active = False # loaded audio, ready to play
         self.__file = None
+        
+        # External
+        self.__rpc = rpc
 
         pass
 
@@ -36,6 +39,14 @@ class Player:
 
         audio = pydub.AudioSegment.from_file(path, input_format)
         info = self.get_info(path, input_format)
+
+        if self.__rpc: # update RPC stats
+            if not self.__rpc.is_alive():
+                self.__rpc.start()
+
+            self.__rpc.title = info["title"]
+            self.__rpc.artist = info["artist"]
+            self.__rpc.album = info["album"]
 
         audio.export(self.__file.name, "wav")
         # audio.export(self.__file, "wav")

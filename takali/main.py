@@ -52,10 +52,15 @@ if __name__ == "__main__":
 
     if args.curses:
         from tui import Window
+        try:
+            from discord import RPC
+            rpc = RPC()
+            plr = Player(rpc)
+        except ModuleNotFoundError: # optional RPC modules not installed
+            plr = Player()
         import curses
 
         stdscr = curses.initscr()
-        plr = Player()
         win = Window(plr, stdscr)
         win.main()
 
