@@ -33,6 +33,7 @@ class Window:
                 k = self.stdscr.getch() # to reload xy
                 self.h, self.w = self.stdscr.getmaxyx()
 
+
                 # track rendering
                 for i, song in enumerate(self.songs[self.__offset:self.__offset+self.h-3]):
                     entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
@@ -72,6 +73,10 @@ class Window:
                     pass
                 elif chr(k) == "s":
                     self.player.stop()
+                elif chr(k) == "+":
+                    self.player.change_volume(10)
+                elif chr(k) == "-":
+                    self.player.change_volume(-10)
                 
                 if (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index < len(self.queue)-1):
                     self.__index += 1
