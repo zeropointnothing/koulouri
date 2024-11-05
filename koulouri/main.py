@@ -1,8 +1,8 @@
 import argparse
 import json
-import os
+import os, sys
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # hide pygame welcome
-os.chdir(os.path.dirname(__file__)) # ensure we run from the same place every time.
+os.chdir(os.path.dirname(os.path.abspath(sys.argv[0]))) # ensure we run from the same place every time.c
 from player import Player
 from time import sleep
 
