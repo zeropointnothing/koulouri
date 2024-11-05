@@ -10,7 +10,10 @@ parser.add_argument("-p", "--play", help="Play a song, artist, or albumb.", type
 parser.add_argument("-l", "--list", help="List all available songs, albums, or artists.", action="store_true")
 parser.add_argument("-r", "--refresh", help="Refresh Koulouri's song cache.", action="store_true")
 parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instead.", action="store_true")
+parser.add_argument("-v", "--version", help="Print Koulouri's version, then exit.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
+
+VERSION = "1.0.0"
 
 def assemble_songs(dir):
     output = []
@@ -49,6 +52,10 @@ def fetch_cache() -> dict:
 
 if __name__ == "__main__":
     args = parser.parse_args()
+
+    if args.version:
+        print(f"koulouri v{VERSION}")
+        parser.exit()
 
     if args.curses:
         from tui import Window
