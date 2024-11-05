@@ -1,9 +1,9 @@
-# takali 
+# koulouri 
 a lightweight Python music player
 
 ## Discord RPC
 
-Takali supports Discord RPC by default, but does not include the packages needed to make it functional.
+Koulouri supports Discord RPC by default, but does not include the packages needed to make it functional.
 
 to enable RPC, run the following commands:
 - `pip install requests`
@@ -23,7 +23,7 @@ if `album` is set, will play an entire album instead. (see [album](#album))
 
 `-l, --list`
 
-lists all the songs that takali can play.
+lists all the songs that Koulouri can play.
 
 if a `songcache` hasn't been created yet, it will create one to reduce fetch time for the next run. this file is named `songcache.json`.
 
@@ -47,13 +47,13 @@ the album flag. for commands that support it, will switch them to 'album mode'.
 
 `-c, --curses`
 
-start Takali using the built in TUI, powered by the Curses library.
+start Koulouri using the built in TUI, powered by the Curses library.
 
 note that curses support is only likely to work on UNIX/Linux systems, and Windows users may experience issues. thus, it is only imported when this flag is supplied.
 
 ## commands (tui)
 
-commands for Takali's build in TUI (see [tui](#tui)).
+commands for Koulouri's build in TUI (see [tui](#tui)).
 
 ### scroll up
 
@@ -77,7 +77,7 @@ type in the track number, then press enter.
 
 ## credits
 
-takali wouldn't be possible without these projects <3:
+Koulouri wouldn't be possible without these projects <3:
 
 - [pydub](https://github.com/jiaaro/pydub) (wav conversion/metadata gathering) - jiaaro
 - [pygame](https://github.com/pygame/pygame) (audio playback) - the PyGame team

@@ -8,7 +8,7 @@ from time import sleep
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--play", help="Play a song, artist, or albumb.", type=int)
 parser.add_argument("-l", "--list", help="List all available songs, albums, or artists.", action="store_true")
-parser.add_argument("-r", "--refresh", help="Refresh Takali's song cache.", action="store_true")
+parser.add_argument("-r", "--refresh", help="Refresh Koulouri's song cache.", action="store_true")
 parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instead.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
 
