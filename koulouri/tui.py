@@ -116,6 +116,10 @@ class Window:
                     self.stdscr.refresh()
         except KeyboardInterrupt:
             self.player.stop()
+            # restore terminal to normal state
+            curses.echo()
+            curses.endwin()
+            self.stdscr.keypad(False)
 
     def play_single(self, index: int):
         self.__index = index
