@@ -35,10 +35,10 @@ class Window:
 
 
                 # track rendering
-                for i, song in enumerate(self.songs[self.__offset:self.__offset+self.h-3]):
+                for i, song in enumerate(self.songs[self.__offset:self.__offset+self.h-4]):
                     entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
                     entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                    self.stdscr.addstr(i, 0, entry_trimmed)
+                    self.stdscr.addstr(i+1, 0, entry_trimmed)
                     self.stdscr.clrtoeol()
 
                 self.stdscr.addstr(self.h-3, 0, self.__user_inp)
@@ -85,13 +85,23 @@ class Window:
                     self.player.play(selected_song["path"], selected_song["type"])
                     song_len = selected_song["duration"]
 
+                try:
+                    volume = round(self.player.mixer.get_volume()*100)
+                    title_str = f"koulouri / [{volume}%] / {self.__mode.upper()}"
+                    title_mid = (self.w//2)-(len(title_str)//2)
+                    self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it
+                    self.stdscr.clrtoeol()
+                    self.stdscr.addstr(0, title_mid, title_str)
+                    self.stdscr.refresh()
+                except:
+                    pass
+
                 if self.player.is_playing()[1] and selected_song:
                     try:
                         # progress bar / now playing
                         now_at = self.player.mixer.get_pos()/1000
-                        volume = round(self.player.mixer.get_volume()*100)
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
-                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]} : [{volume}%]/{self.__mode.upper()}"
+                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} >{prog_bar}"
