@@ -77,17 +77,25 @@ class Window:
                     self.player.change_volume(10)
                 elif chr(k) == "-":
                     self.player.change_volume(-10)
-                
+                elif chr(k) == " ":
+                    paused = not paused
+
+                    if paused:
+                        self.player.pause()
+                    else:
+                        self.player.resume()
+
                 if (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index < len(self.queue)-1):
                     self.__index += 1
                     selected_song = self.queue[self.__index]
                     self.player.stop() # ensure that we stop anything currently playing
                     self.player.play(selected_song["path"], selected_song["type"])
                     song_len = selected_song["duration"]
+                    paused = False
 
                 try:
                     volume = round(self.player.mixer.get_volume()*100)
-                    title_str = f"koulouri / [{volume}%] / {self.__mode.upper()}"
+                    title_str = f"koulouri  / [{volume}%] / {self.__mode.upper()}"
                     title_mid = (self.w//2)-(len(title_str)//2)
                     self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it
                     self.stdscr.clrtoeol()
@@ -96,15 +104,16 @@ class Window:
                 except:
                     pass
 
-                if self.player.is_playing()[1] and selected_song:
+                if self.player.is_active() and selected_song:
                     try:
                         # progress bar / now playing
                         now_at = self.player.mixer.get_pos()/1000
+                        symbol = ">" if not paused else "#"
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
                         now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
-                        final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} >{prog_bar}"
+                        final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} {symbol}{prog_bar}"
                         self.stdscr.addstr(self.h-1, 0, final_prog)
                         self.stdscr.clrtoeol()
                     except:
