@@ -35,16 +35,25 @@ def generate_cache(dir):
 
     for song in songs:
         song_meta.append(plr.get_info(song[0], song[1]))
-    
-    with open("songcache.json", "w") as f:
-        json.dump(song_meta, f)
 
     plr.exit()
 
-def fetch_cache() -> dict:
-    if not os.path.exists("songcache.json"):
+    return song_meta
+
+def fetch_cache(force: bool = False) -> dict:
+    if not os.path.exists("songcache.json") or force:
+        user = os.environ.get('USER', os.environ.get('USERNAME', "user"))
+        paths = [f"/home/{user}/Music", f"C:/Users/{user}/Music"]
         print("fetching metadata...")
-        generate_cache("/home/exii/Music")
+        for path in paths:
+            try:
+                song_meta = generate_cache(path)
+                with open("songcache.json", "w") as f:
+                    json.dump(song_meta, f)
+                return
+            except FileNotFoundError:
+                continue
+        raise FileNotFoundError("Unable to locate music folder!")
 
     with open("songcache.json", "r") as f:
         return json.load(f)
@@ -167,8 +176,7 @@ if __name__ == "__main__":
 
 
     elif args.refresh:
-        print("fetching metadata...")
-        generate_cache("/home/exii/Music")
+        fetch_cache(True)
     elif args.list:
         song_meta = fetch_cache()
         songs = sorted(song_meta, key=lambda d: d["album"])
