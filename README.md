@@ -1,9 +1,9 @@
 # koulouri 
 a lightweight Python music player
 
-## Discord RPC
+## Discord RPC (source code only)
 
-Koulouri supports Discord RPC by default, but does not include the packages needed to make it functional.
+Koulouri supports Discord RPC by default, but does not include the packages needed to make it functional in `requirements.txt`.
 
 to enable RPC, run the following commands:
 - `pip install requests`
