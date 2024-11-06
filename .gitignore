@@ -2,3 +2,5 @@
 __pycache__
 test.*
 songcache.json
+main.dist
+main.build
