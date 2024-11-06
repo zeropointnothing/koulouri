@@ -53,7 +53,7 @@ note that curses support is only likely to work on UNIX/Linux systems, and Windo
 
 ## commands (tui)
 
-commands for Koulouri's build in TUI (see [tui](#tui)).
+commands for Koulouri's built in TUI (see [tui](#tui))
 
 ### scroll up
 
@@ -67,13 +67,39 @@ scrolls the track view up one.
 
 scrolls the track view down one.
 
-### play
+### submit
 
-`INT`
+`INT<ENTER>`
 
 play the selected song.
 
 type in the track number, then press enter.
+
+### volume up
+
+`+`
+
+increases the volume by 10.
+
+### volume down
+
+`-`
+
+decreases the volume by 10.
+
+### pause/resume
+
+`<SPACE>`
+
+pauses or resumes playback. the current state is shown by the progress bar's leader (`>` = playing, `#` = paused).
+
+note that Koulouri will not load the next song if it is paused.
+
+### skip
+
+`s`
+
+skips the current song, increasing the index by one.
 
 ## credits
 
