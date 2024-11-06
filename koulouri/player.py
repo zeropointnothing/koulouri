@@ -1,4 +1,5 @@
 import pydub
+import os, sys
 import pydub.utils
 from pygame import mixer
 from pygame import error as pyerr
@@ -34,6 +35,11 @@ class Player:
         Returns song information.
         """
         tmp = NamedTemporaryFile(prefix="koulouri-conv_") # create a temp file to write the conversion to
+        
+        if sys.platform == "win32":
+            tmp.delete = False # windows support
+            tmp.close()
+
         self.__file = tmp
         # print(tmp.name)
 
@@ -90,10 +96,15 @@ class Player:
         Stop playback and close the input file, if necessary.
         """
         self.mixer.stop()
+        self.mixer.unload()
 
         if self.__file and not self.__file.closed: # ensure temp files are closed properly
             self.__file.close()
 
+        if sys.platform == "win32" and self.__file: # manually delete the temp file on windows systems
+            os.unlink(self.__file.name)
+
+        self.__file = None
         self.__playing = False
         self.__active = False
 
