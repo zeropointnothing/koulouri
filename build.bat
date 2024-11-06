@@ -1,0 +1,1 @@
+nuitka koulouri/main.py --output-filename=koulouri --no-deployment-flag=self-execution --standalone
