@@ -1,4 +1,5 @@
 from pypresence import Presence, ActivityType
+from pypresence.exceptions import PipeClosed
 import time
 import threading
 import requests
@@ -49,7 +50,11 @@ class RPC:
         while self.__running:
             time.sleep(5)
             if self.artist != artist or self.album != album or self.title != title:
-                self.set_activity(self.title, self.artist, self.album)
+                try:
+                    self.set_activity(self.title, self.artist, self.album)
+                except PipeClosed: # lost connection to discord
+                    self.RPC.close()
+                    self.__running = False
                 title, artist, album = self.title, self.artist, self.album
 
     def is_alive(self):
