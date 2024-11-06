@@ -33,9 +33,13 @@ class Window:
                 k = self.stdscr.getch() # to reload xy
                 self.h, self.w = self.stdscr.getmaxyx()
 
+                if self.__mode == "tracks":
+                    view = self.songs
+                elif self.__mode == "queue":
+                    view = self.queue
 
                 # track rendering
-                for i, song in enumerate(self.songs[self.__offset:self.__offset+self.h-4]):
+                for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
                     entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
                     entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
                     self.stdscr.addstr(i+1, 0, entry_trimmed)
@@ -50,20 +54,27 @@ class Window:
                     self.__user_inp = self.__user_inp[:len(self.__user_inp)-1]
                 elif k == curses.KEY_DOWN:
                     self.__offset += 1
-                    self.__offset %= (len(self.songs))
+                    self.__offset %= (len(view))
                     self.stdscr.clear()
                 elif k == curses.KEY_UP:
                     self.__offset -= 1
-                    self.__offset %= (len(self.songs))
+                    self.__offset %= (len(view))
                     self.stdscr.clear()
                 elif k in [curses.KEY_ENTER, 10, 13]:
                     try:
                         k = int(self.__user_inp)
                         self.__user_inp = ""
-                        if k in range(len(self.songs)):
+                        if k in range(len(self.songs)) and self.__mode == "tracks":
                             self.queue.append(self.songs[k])
+                        if k in range(len(self.queue)) and self.__mode == "queue":
+                            self.queue.remove(self.queue[k])
+
+                            # adjust the index if we've moved positions
+                            if self.__index >= k and self.__index > -1:
+                                self.__index -= 1
                         else:
                             continue
+                        self.stdscr.clear()
                     except:
                         sleep(0.005)
                         continue
@@ -71,6 +82,14 @@ class Window:
                     self.__user_inp += chr(k)
                 elif k == -1:
                     pass
+                elif chr(k) == "q":
+                    self.__mode = "queue"
+                    self.__offset = 0
+                    self.stdscr.clear()
+                elif chr(k) == "t":
+                    self.__mode = "tracks"
+                    self.__offset = 0
+                    self.stdscr.clear()
                 elif chr(k) == "s":
                     self.player.stop()
                 elif chr(k) == "+":
