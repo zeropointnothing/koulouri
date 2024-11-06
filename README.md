@@ -71,7 +71,10 @@ scrolls the track view down one.
 
 `INT<ENTER>`
 
-play the selected song.
+submits the track to the current menu. operates differently based on what mode you're in.
+
+- TRACKS: add the selected song to the queue.
+- QUEUE: remove the selected song from the queue.
 
 type in the track number, then press enter.
 
