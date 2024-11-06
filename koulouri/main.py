@@ -13,7 +13,7 @@ parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instea
 parser.add_argument("-v", "--version", help="Print Koulouri's version, then exit.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 def assemble_songs(dir):
     output = []
