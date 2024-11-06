@@ -41,6 +41,7 @@ def generate_cache(dir):
     return song_meta
 
 def fetch_cache(force: bool = False) -> dict:
+    out = []
     if not os.path.exists("songcache.json") or force:
         user = os.environ.get('USER', os.environ.get('USERNAME', "user"))
         paths = [f"/home/{user}/Music", f"C:/Users/{user}/Music"]
@@ -48,12 +49,16 @@ def fetch_cache(force: bool = False) -> dict:
         for path in paths:
             try:
                 song_meta = generate_cache(path)
-                with open("songcache.json", "w") as f:
-                    json.dump(song_meta, f)
-                return
+                out.extend(song_meta)
             except FileNotFoundError:
                 continue
-        raise FileNotFoundError("Unable to locate music folder!")
+        
+        if out:
+            with open("songcache.json", "w") as f:
+                json.dump(out, f)
+                return out
+        else:
+            raise FileNotFoundError("Unable to locate music folder!")
 
     with open("songcache.json", "r") as f:
         return json.load(f)
