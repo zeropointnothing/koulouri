@@ -52,11 +52,11 @@ class Window:
 
                 if k in [curses.KEY_BACKSPACE, 127]:
                     self.__user_inp = self.__user_inp[:len(self.__user_inp)-1]
-                elif k == curses.KEY_DOWN:
+                elif k == curses.KEY_DOWN and view:
                     self.__offset += 1
                     self.__offset %= (len(view))
                     self.stdscr.clear()
-                elif k == curses.KEY_UP:
+                elif k == curses.KEY_UP and view:
                     self.__offset -= 1
                     self.__offset %= (len(view))
                     self.stdscr.clear()
