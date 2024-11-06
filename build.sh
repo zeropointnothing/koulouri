@@ -1,1 +1,1 @@
-nuitka koulouri/main.py --follow-imports --output-filename=koulouri-bin --no-deployment-flag=self-execution
+nuitka koulouri/main.py --output-filename=koulouri-bin --no-deployment-flag=self-execution --standalone
