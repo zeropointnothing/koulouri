@@ -79,6 +79,26 @@ submits the track to the current menu. operates differently based on what mode y
 
 type in the track number, then press enter.
 
+### albums view
+
+`a`
+
+switches Koulouri's mode to `ALBUMS`. will filter based on album title.
+
+### queue view
+
+`q`
+
+switches Koulouri's mode to `QUEUE`. will display all the songs in the queue, including ones that have already played.
+
+### tracks view
+
+`t`
+
+the default view.
+
+switches Koulouri's mode to `TRACKS`. will display every song Koulouri is aware of inside its `songcache`.
+
 ### volume up
 
 `+`
