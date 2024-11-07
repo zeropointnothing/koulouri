@@ -37,6 +37,9 @@ class Window:
                     view = self.songs
                 elif self.__mode == "queue":
                     view = self.queue
+                elif self.__mode == "albums":
+                    view = list(dict.fromkeys([(_["artist"], _["album"]) for _ in self.songs])) # remove duplicates
+                    view = [{"artist": _[0], "title": _[1]} for _ in view] # convert back to dicts we can use
 
                 # track rendering
                 for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
@@ -66,12 +69,15 @@ class Window:
                         self.__user_inp = ""
                         if k in range(len(self.songs)) and self.__mode == "tracks":
                             self.queue.append(self.songs[k])
-                        if k in range(len(self.queue)) and self.__mode == "queue":
+                        elif k in range(len(self.queue)) and self.__mode == "queue":
                             self.queue.remove(self.queue[k])
 
                             # adjust the index if we've moved positions
                             if self.__index >= k and self.__index > -1:
                                 self.__index -= 1
+                        elif k in range(len(view)) and self.__mode == "albums":
+                            album = [_ for _ in self.songs if _["album"] == view[k]["title"]]
+                            self.queue.extend(sorted(album, key=lambda d: d["track"]))
                         else:
                             continue
                         self.stdscr.clear()
@@ -88,6 +94,10 @@ class Window:
                     self.stdscr.clear()
                 elif chr(k) == "t":
                     self.__mode = "tracks"
+                    self.__offset = 0
+                    self.stdscr.clear()
+                elif chr(k) == "a":
+                    self.__mode = "albums"
                     self.__offset = 0
                     self.stdscr.clear()
                 elif chr(k) == "s":
