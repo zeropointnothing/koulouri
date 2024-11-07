@@ -41,20 +41,46 @@ class Window:
                 elif self.__mode == "albums":
                     view = list(dict.fromkeys([(_["artist"], _["album"]) for _ in self.songs])) # remove duplicates
                     view = [{"artist": _[0], "title": _[1]} for _ in view] # convert back to dicts we can use
+                elif self.__mode == "lyrics" and selected_song:
+                    view = self.player.fetch_lyrics(selected_song["path"])
+                    # view = [{"artist": "", "title": str(_)} for _ in view]
+                else:
+                    view = []
 
-                # track rendering
-                for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                    entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
-                    if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
-                        if self.__mode == "queue" and self.__index != i: # mark only the current playing instance
-                            entry = "  " + entry
-                        else:
+                # lyrics rendering:
+                if self.__mode == "lyrics":
+                    now_at = self.player.mixer.get_pos()/1000
+                    lyric_times = []
+                    for lyric in view:
+                        lyric_at = float(lyric["tsec"]+(lyric["tmin"]*60))+float(lyric["tmil"])
+                        tscore =  now_at - lyric_at
+                        if tscore >= 0:
+                            lyric_times.append(tscore)
+
+
+                    for i, line in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        entry = f"{line["lyric"]}"
+
+                        if lyric_times and line == view[lyric_times.index(min(lyric_times))]:
                             entry = "~ " + entry
-                    else:
-                        entry = "  " + entry
-                    entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                    self.stdscr.addstr(i+1, 0, entry_trimmed)
-                    self.stdscr.clrtoeol()
+
+                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
+                        self.stdscr.addstr(i+1, 0, entry_trimmed)
+                        self.stdscr.clrtoeol()
+                else:
+                    # track rendering
+                    for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
+                        if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
+                            if self.__mode == "queue" and self.__index != i: # mark only the current playing instance
+                                entry = "  " + entry
+                            else:
+                                entry = "~ " + entry
+                        else:
+                            entry = "  " + entry
+                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
+                        self.stdscr.addstr(i+1, 0, entry_trimmed)
+                        self.stdscr.clrtoeol()
 
                 self.stdscr.addstr(self.h-3, 0, self.__user_inp)
                 self.stdscr.clrtoeol()
@@ -106,6 +132,10 @@ class Window:
                     self.stdscr.clear()
                 elif chr(k) == "a":
                     self.__mode = "albums"
+                    self.__offset = 0
+                    self.stdscr.clear()
+                elif chr(k) == "l":
+                    self.__mode = "lyrics"
                     self.__offset = 0
                     self.stdscr.clear()
                 elif chr(k) == "s":
