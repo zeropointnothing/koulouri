@@ -74,6 +74,7 @@ scrolls the track view down one.
 submits the track to the current menu. operates differently based on what mode you're in.
 
 - TRACKS: add the selected song to the queue.
+- ALBUMS: add the entire album to the queue.
 - QUEUE: remove the selected song from the queue.
 
 type in the track number, then press enter.
