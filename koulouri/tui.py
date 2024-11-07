@@ -25,6 +25,7 @@ class Window:
         song_meta = fetch_cache()
         self.songs = sorted(song_meta, key=lambda d: d["album"])
         paused = False
+        selected_song = None
         song_len = 0
 
         try:
@@ -44,6 +45,11 @@ class Window:
                 # track rendering
                 for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
                     entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
+                    # entry = f"{i}, {self.songs[self.__index]}"
+                    if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
+                        entry = "~ " + entry
+                    else:
+                        entry = "  " + entry
                     entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
                     self.stdscr.addstr(i+1, 0, entry_trimmed)
                     self.stdscr.clrtoeol()
@@ -102,6 +108,7 @@ class Window:
                     self.stdscr.clear()
                 elif chr(k) == "s":
                     self.player.stop()
+                    selected_song = None
                 elif chr(k) == "+":
                     self.player.change_volume(10)
                 elif chr(k) == "-":
