@@ -26,6 +26,7 @@ class Window:
         self.songs = sorted(song_meta, key=lambda d: d["album"])
         paused = False
         selected_song = None
+        lyric_scroll = True # auto scroll with lyrics
         song_len = 0
 
         try:
@@ -57,6 +58,11 @@ class Window:
                         if tscore >= 0:
                             lyric_times.append(tscore)
 
+                    # keep the current lyric in the center of the view
+                    if lyric_times and lyric_scroll:
+                        min_lyric = lyric_times.index(min(lyric_times))
+                        if min_lyric >= (self.h-3)//2:
+                            self.__offset = min_lyric - ((self.h-3)//2)
 
                     for i, line in enumerate(view[self.__offset:self.__offset+self.h-4]):
                         entry = f"{line["lyric"]}"
@@ -93,10 +99,12 @@ class Window:
                     self.__offset += 1
                     self.__offset %= (len(view))
                     self.stdscr.clear()
+                    lyric_scroll = False # allow manual control over lyric view
                 elif k == curses.KEY_UP and view:
                     self.__offset -= 1
                     self.__offset %= (len(view))
                     self.stdscr.clear()
+                    lyric_scroll = False
                 elif k in [curses.KEY_ENTER, 10, 13]:
                     try:
                         k = int(self.__user_inp)
@@ -136,6 +144,7 @@ class Window:
                     self.stdscr.clear()
                 elif chr(k) == "l":
                     self.__mode = "lyrics"
+                    lyric_scroll = True # reset auto scroll
                     self.__offset = 0
                     self.stdscr.clear()
                 elif chr(k) == "s":
