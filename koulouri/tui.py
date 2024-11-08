@@ -193,11 +193,11 @@ class Window:
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} {symbol}{prog_bar}"
                         self.stdscr.addstr(self.h-1, 0, final_prog)
                         self.stdscr.clrtoeol()
-                    except:
-                        selected_song = None
+                        self.stdscr.addstr(self.h-2, 0, nplaying_trimmed)
+                        self.stdscr.clrtoeol()
+                    except: # terminal is most likely larger/smaller than we think, nothing to worry about
+                        # selected_song = None
                         pass
-                    self.stdscr.addstr(self.h-2, 0, nplaying_trimmed)
-                    self.stdscr.clrtoeol()
 
                     self.stdscr.refresh()
         except KeyboardInterrupt:
