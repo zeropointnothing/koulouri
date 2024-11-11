@@ -169,6 +169,9 @@ class Window:
                     self.player.play(selected_song["path"], selected_song["type"])
                     song_len = selected_song["duration"]
                     paused = False
+                elif selected_song and (not self.player.is_playing()[1] and (self.queue and self.__index == len(self.queue)-1)):
+                    selected_song = None
+                    self.player.stop()
 
                 try:
                     volume = round(self.player.mixer.get_volume()*100)
