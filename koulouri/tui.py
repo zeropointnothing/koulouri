@@ -78,7 +78,7 @@ class Window:
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
                         entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
                         if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
-                            if self.__mode == "queue" and self.__index != i: # mark only the current playing instance
+                            if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
                                 entry = "  " + entry
                             else:
                                 entry = "~ " + entry
