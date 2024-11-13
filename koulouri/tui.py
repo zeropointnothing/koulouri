@@ -88,7 +88,7 @@ class Window:
                         self.stdscr.addstr(i+1, 0, entry_trimmed)
                         self.stdscr.clrtoeol()
 
-                self.stdscr.addstr(self.h-3, 0, self.__user_inp)
+                self.stdscr.addstr(self.h-3, 0, str(self.__index))
                 self.stdscr.clrtoeol()
 
                 # CONTROLS
@@ -147,9 +147,21 @@ class Window:
                     lyric_scroll = True # reset auto scroll
                     self.__offset = 0
                     self.stdscr.clear()
-                elif chr(k) == "s":
+                elif chr(k) == "n":
                     self.player.stop()
                     selected_song = None
+                elif chr(k) == "p":
+                    if self.player.mixer.get_pos()/1000 > 5:
+                        self.__index -= 1
+                        self.player.stop()
+                        selected_song = None
+                    elif self.__index <= 0:
+                        pass
+                    else:
+                        self.__index -= 2
+                        self.player.stop()
+                        selected_song = None
+
                 elif chr(k) == "+":
                     self.player.change_volume(10)
                 elif chr(k) == "-":
