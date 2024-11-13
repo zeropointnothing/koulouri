@@ -125,11 +125,17 @@ pauses or resumes playback. the current state is shown by the progress bar's lea
 
 note that Koulouri will not load the next song if it is paused.
 
-### skip
+### next track
 
-`s`
+`n`
 
 skips the current song, increasing the index by one.
+
+### previous track
+
+`p`
+
+if the playtime is less than 5, playback will be stopped, and the previous song will be played. elsewise, the current song will be restarted.
 
 ## credits
 
