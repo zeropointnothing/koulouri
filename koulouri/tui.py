@@ -88,7 +88,7 @@ class Window:
                         self.stdscr.addstr(i+1, 0, entry_trimmed)
                         self.stdscr.clrtoeol()
 
-                self.stdscr.addstr(self.h-3, 0, str(self.__index))
+                self.stdscr.addstr(self.h-3, 0, self.__user_inp)
                 self.stdscr.clrtoeol()
 
                 # CONTROLS
