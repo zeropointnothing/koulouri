@@ -99,6 +99,12 @@ the default view.
 
 switches Koulouri's mode to `TRACKS`. will display every song Koulouri is aware of inside its `songcache`.
 
+### lyrics view
+
+`l`
+
+switches Koulouri's mode to `LYRICS`. will display a song's lyrics, if any can be found.
+
 ### volume up
 
 `+`
