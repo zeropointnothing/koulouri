@@ -174,7 +174,7 @@ class Window:
                     self.player.stop()
 
                 try:
-                    volume = round(self.player.mixer.get_volume()*100)
+                    volume = self.player.volume
                     title_str = f"koulouri  / [{volume}%] / {self.__mode.upper()}"
                     title_mid = (self.w//2)-(len(title_str)//2)
                     self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it

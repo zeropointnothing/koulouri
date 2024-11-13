@@ -140,14 +140,15 @@ class Player:
             return False
 
     def change_volume(self, by: int):
-        new_vol = self.mixer.get_volume()+(by/100)
+        new_vol = self.volume+by
 
         if new_vol <= 0:
-            new_vol = 0.0
-        elif new_vol >= 1.0:
-            new_vol = 1.0
+            new_vol = 0
+        elif new_vol >= 100:
+            new_vol = 100
 
-        self.mixer.set_volume(new_vol)
+        self.volume = new_vol
+        self.mixer.set_volume(new_vol/100)
 
     def is_playing(self):
         """
