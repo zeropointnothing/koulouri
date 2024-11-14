@@ -4,7 +4,7 @@ import pydub.utils
 from pygame import mixer
 from pygame import error as pyerr
 from tempfile import NamedTemporaryFile
-from time import sleep
+import time
 
 class Player:
     def __init__(self, rpc = None):
@@ -19,6 +19,8 @@ class Player:
         self.__playing = False # playing audio
         self.__active = False # loaded audio, ready to play
         self.__file = None
+        self.__start_time = 0 # audio time
+        self.__paused_time = 0 # for time adjustment
         
         # External
         self.__lyrics = ""
@@ -64,6 +66,7 @@ class Player:
 
         self.__playing = True
         self.__active = True
+        self.__start_time = time.time()
 
         return info
 
@@ -124,13 +127,19 @@ class Player:
         """
         self.mixer.pause()
         self.__playing = False
+        self.__paused_time = time.time()
 
     def resume(self):
         """
         Resume playback.
+
+        Automatically shifts the `__start_time` variable so that it matches with
+        the song after it resumes.
         """
         self.mixer.unpause()
         self.__playing = True
+        self.__start_time += (time.time() - self.__paused_time)
+        self.__paused_time = 0
 
     def seek(self, to: int):
         try:
@@ -138,6 +147,15 @@ class Player:
             return True
         except pyerr:
             return False
+
+    def get_time(self) -> float:
+        """
+        Get the current playtime in seconds.
+
+        Should be more accurate when accounting for pausing than the mixer by calculating
+        the time based on a shiftable start value.
+        """
+        return (time.time() - self.__start_time) if not self.__paused_time else (self.__paused_time - self.__start_time)
 
     def change_volume(self, by: int):
         new_vol = self.volume+by
