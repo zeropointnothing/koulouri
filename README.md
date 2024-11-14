@@ -79,6 +79,12 @@ submits the track to the current menu. operates differently based on what mode y
 
 type in the track number, then press enter.
 
+### insert mode
+
+`i`
+
+switch Koulouri into "insert mode". while this mode is active (indicated by the `[I]` symbol in front of the user input), affected views will perform their `submit` action at the current index instead of the end of the queue.
+
 ### albums view
 
 `a`
