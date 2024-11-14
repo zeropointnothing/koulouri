@@ -74,9 +74,42 @@ scrolls the track view down one.
 submits the track to the current menu. operates differently based on what mode you're in.
 
 - TRACKS: add the selected song to the queue.
+- ALBUMS: add the entire album to the queue.
 - QUEUE: remove the selected song from the queue.
 
 type in the track number, then press enter.
+
+### insert mode
+
+`i`
+
+switch Koulouri into "insert mode". while this mode is active (indicated by the `[I]` symbol in front of the user input), affected views will perform their `submit` action at the current index instead of the end of the queue.
+
+### albums view
+
+`a`
+
+switches Koulouri's mode to `ALBUMS`. will filter based on album title.
+
+### queue view
+
+`q`
+
+switches Koulouri's mode to `QUEUE`. will display all the songs in the queue, including ones that have already played.
+
+### tracks view
+
+`t`
+
+the default view.
+
+switches Koulouri's mode to `TRACKS`. will display every song Koulouri is aware of inside its `songcache`.
+
+### lyrics view
+
+`l`
+
+switches Koulouri's mode to `LYRICS`. will display a song's lyrics, if any can be found.
 
 ### volume up
 
@@ -98,11 +131,17 @@ pauses or resumes playback. the current state is shown by the progress bar's lea
 
 note that Koulouri will not load the next song if it is paused.
 
-### skip
+### next track
 
-`s`
+`n`
 
 skips the current song, increasing the index by one.
+
+### previous track
+
+`p`
+
+if the playtime is less than 5, playback will be stopped, and the previous song will be played. elsewise, the current song will be restarted.
 
 ## credits
 

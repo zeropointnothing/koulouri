@@ -21,6 +21,7 @@ class Player:
         self.__file = None
         
         # External
+        self.__lyrics = ""
         self.__rpc = rpc
 
         pass
@@ -104,6 +105,7 @@ class Player:
         if sys.platform == "win32" and self.__file: # manually delete the temp file on windows systems
             os.unlink(self.__file.name)
 
+        self.__lyrics = ""
         self.__file = None
         self.__playing = False
         self.__active = False
@@ -138,14 +140,15 @@ class Player:
             return False
 
     def change_volume(self, by: int):
-        new_vol = self.mixer.get_volume()+(by/100)
+        new_vol = self.volume+by
 
         if new_vol <= 0:
-            new_vol = 0.0
-        elif new_vol >= 1.0:
-            new_vol = 1.0
+            new_vol = 0
+        elif new_vol >= 100:
+            new_vol = 100
 
-        self.mixer.set_volume(new_vol)
+        self.volume = new_vol
+        self.mixer.set_volume(new_vol/100)
 
     def is_playing(self):
         """
@@ -160,3 +163,28 @@ class Player:
         Whether or not the player has a file loaded and ready to play.
         """
         return self.__active
+    
+    def fetch_lyrics(self, path: str):
+        lyric_file = path.split(".")[0]+".lrc"
+        
+        if not os.path.exists(lyric_file):
+            return ""
+
+        if self.__lyrics:
+            return self.__lyrics
+
+        with open(lyric_file, "r") as f:
+            lyrics = []
+            for line in f.read().split("\n"):
+                try:
+                    time_min = int(line[1:3])
+                    time_sec = int(line[4:6])
+                    time_mili = float(line[6:9])
+                    lyric = line[10:]
+
+                    lyrics.append({"lyric": lyric, "tmin": time_min, "tsec": time_sec, "tmil": time_mili})
+                except:
+                    pass
+            self.__lyrics = lyrics
+
+            return self.__lyrics

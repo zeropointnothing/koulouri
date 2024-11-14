@@ -1,5 +1,5 @@
 from pypresence import Presence, ActivityType
-from pypresence.exceptions import PipeClosed
+from pypresence.exceptions import PipeClosed, ServerError
 import time
 import threading
 import requests
@@ -82,9 +82,14 @@ class RPC:
         cover_url = self.get_musicbrainz_album_cover(artist, album)
 
         start_time=time.time() # Using the time that we imported at the start. start_time equals time.
-        self.RPC.update(activity_type=ActivityType.LISTENING, 
-                        details=f"{title}",
-                        state=artist,
-                        start=start_time,
-                        large_image=cover_url,
-                        large_text=album) # We want to apply start time when you run the presence.
+        try:
+            self.RPC.update(activity_type=ActivityType.LISTENING, 
+                            details=f"{title}",
+                            state=artist,
+                            start=start_time,
+                            large_image=cover_url,
+                            large_text=album) # We want to apply start time when you run the presence.
+        except ServerError:
+            self.RPC.close()
+            self.__running = False
+            
