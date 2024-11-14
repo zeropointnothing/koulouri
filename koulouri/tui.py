@@ -25,6 +25,7 @@ class Window:
         song_meta = fetch_cache()
         self.songs = sorted(song_meta, key=lambda d: d["album"])
         paused = False
+        insert = False # "insert mode"
         selected_song = None
         lyric_scroll = True # auto scroll with lyrics
         song_len = 0
@@ -88,7 +89,8 @@ class Window:
                         self.stdscr.addstr(i+1, 0, entry_trimmed)
                         self.stdscr.clrtoeol()
 
-                self.stdscr.addstr(self.h-3, 0, self.__user_inp)
+                userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
+                self.stdscr.addstr(self.h-3, 0, userinpstr)
                 self.stdscr.clrtoeol()
 
                 # CONTROLS
@@ -110,7 +112,7 @@ class Window:
                         k = int(self.__user_inp)
                         self.__user_inp = ""
                         if k in range(len(self.songs)) and self.__mode == "tracks":
-                            self.queue.append(self.songs[k])
+                            self.queue.append(self.songs[k]) if not insert else self.queue.insert(self.__index+1, self.songs[k])
                         elif k in range(len(self.queue)) and self.__mode == "queue":
                             self.queue.remove(self.queue[k])
 
@@ -119,7 +121,10 @@ class Window:
                                 self.__index -= 1
                         elif k in range(len(view)) and self.__mode == "albums":
                             album = [_ for _ in self.songs if _["album"] == view[k]["title"]]
-                            self.queue.extend(sorted(album, key=lambda d: d["track"]))
+                            if not insert:
+                                self.queue.extend(sorted(album, key=lambda d: d["track"]))
+                            else:
+                                self.queue[self.__index+1:] = sorted(album, key=lambda d: d["track"]) + self.queue[self.__index+1:]
                         else:
                             continue
                         self.stdscr.clear()
@@ -147,6 +152,8 @@ class Window:
                     lyric_scroll = True # reset auto scroll
                     self.__offset = 0
                     self.stdscr.clear()
+                elif chr(k) == "i":
+                    insert = not insert
                 elif chr(k) == "n":
                     self.player.stop()
                     selected_song = None
