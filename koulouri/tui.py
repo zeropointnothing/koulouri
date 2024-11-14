@@ -207,7 +207,7 @@ class Window:
                     try:
                         # progress bar / now playing
                         # now_at = self.player.mixer.get_pos()/1000
-                        now_at = int(self.player.get_time())
+                        now_at = self.player.get_time()
                         symbol = ">" if not paused else "#"
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
                         now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
