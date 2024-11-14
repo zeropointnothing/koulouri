@@ -51,7 +51,7 @@ class Window:
 
                 # lyrics rendering:
                 if self.__mode == "lyrics":
-                    now_at = self.player.mixer.get_pos()/1000
+                    now_at = self.player.get_time()
                     lyric_times = []
                     for lyric in view:
                         lyric_at = float(lyric["tsec"]+(lyric["tmin"]*60))+float(lyric["tmil"])
@@ -158,7 +158,7 @@ class Window:
                     self.player.stop()
                     selected_song = None
                 elif chr(k) == "p":
-                    if self.player.mixer.get_pos()/1000 > 5:
+                    if self.player.get_time() > 5:
                         self.__index -= 1
                         self.player.stop()
                         selected_song = None
@@ -206,7 +206,8 @@ class Window:
                 if self.player.is_active() and selected_song:
                     try:
                         # progress bar / now playing
-                        now_at = self.player.mixer.get_pos()/1000
+                        # now_at = self.player.mixer.get_pos()/1000
+                        now_at = int(self.player.get_time())
                         symbol = ">" if not paused else "#"
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
                         now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
