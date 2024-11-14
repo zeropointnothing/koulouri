@@ -12,6 +12,7 @@ parser.add_argument("-r", "--refresh", help="Refresh Koulouri's song cache.", ac
 parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instead.", action="store_true")
 parser.add_argument("-v", "--version", help="Print Koulouri's version, then exit.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
+parser.add_argument("--add-source", help="Add a folder to your library.", action="append")
 
 VERSION = "1.3.0"
 
@@ -45,6 +46,8 @@ def fetch_cache(force: bool = False) -> dict:
     if not os.path.exists("songcache.json") or force:
         user = os.environ.get('USER', os.environ.get('USERNAME', "user"))
         paths = [f"/home/{user}/Music", f"C:/Users/{user}/Music"]
+        if args.add_source:
+            paths.extend(args.add_source)
         print("fetching metadata...")
         for path in paths:
             try:
