@@ -21,6 +21,7 @@ class Player:
         self.__file = None
         self.__start_time = 0 # audio time
         self.__paused_time = 0 # for time adjustment
+        self.__offset_time = 0
         
         # External
         self.__lyrics = ""
@@ -66,7 +67,7 @@ class Player:
 
         self.__playing = True
         self.__active = True
-        self.__start_time = time.time()
+        self.__offset_time = 0
 
         return info
 
@@ -143,9 +144,24 @@ class Player:
 
     def seek(self, to: int):
         try:
-            self.mixer.set_pos(to)
+            self.__offset_time += to # offset to visuals; pygame doesn't store this for us
+
+            # Ensure we don't go into the negatives
+            new_pos = self.get_time()
+            if new_pos < 0:
+                self.__offset_time -= to  # undo the change if we have
+                return False
+
+            # Most accurate by restarting the playback
+            self.mixer.stop()
+            self.mixer.play(start=new_pos)
+
+            if not self.__playing: # most likely paused, so we should ensure it stays that way
+                self.mixer.pause()
+
             return True
-        except pyerr:
+        except Exception as e:
+            print(f"Seek error: {e}")
             return False
 
     def get_time(self) -> float:
@@ -155,7 +171,8 @@ class Player:
         Should be more accurate when accounting for pausing than the mixer by calculating
         the time based on a shiftable start value.
         """
-        return (time.time() - self.__start_time) if not self.__paused_time else (self.__paused_time - self.__start_time)
+        return self.mixer.get_pos()/1000 + self.__offset_time
+        # return (time.time() - self.__start_time) if not self.__paused_time else (self.__paused_time - self.__start_time)
 
     def change_volume(self, by: int):
         new_vol = self.volume+by
