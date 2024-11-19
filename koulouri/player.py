@@ -138,25 +138,23 @@ class Player:
         self.__playing = True
 
     def seek(self, to: int):
+        # probably the hardest thing to implement here ;-;
         try:
-            self.__offset_time += to # offset to visuals; pygame doesn't store this for us
-
             # Ensure we don't go into the negatives
-            new_pos = self.get_time()
-            if new_pos < 0:
-                self.__offset_time -= to  # undo the change if we have
+            if to < 0:
                 return False
+
+            # adjust visual offset
+            self.__offset_time = to
 
             # Most accurate by restarting the playback
             self.mixer.stop()
-            self.mixer.play(start=new_pos)
+            self.mixer.play(start=to)
 
             if not self.__playing: # most likely paused, so we should ensure it stays that way
                 self.mixer.pause()
 
-            return True
-        except Exception as e:
-            print(f"Seek error: {e}")
+        except pyerr:
             return False
 
     def get_time(self) -> float:

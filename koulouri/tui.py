@@ -108,9 +108,9 @@ class Window:
                     self.stdscr.clear()
                     lyric_scroll = False
                 elif k == curses.KEY_RIGHT and selected_song:
-                    self.player.seek(5)
+                    self.player.seek(round(self.player.get_time()+5))
                 elif k == curses.KEY_LEFT and selected_song:
-                    self.player.seek(-5)
+                    self.player.seek(round(self.player.get_time()-5))
                 elif k in [curses.KEY_ENTER, 10, 13]:
                     try:
                         k = int(self.__user_inp)
