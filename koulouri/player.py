@@ -19,9 +19,7 @@ class Player:
         self.__playing = False # playing audio
         self.__active = False # loaded audio, ready to play
         self.__file = None
-        self.__start_time = 0 # audio time
-        self.__paused_time = 0 # for time adjustment
-        self.__offset_time = 0
+        self.__offset_time = 0 # visual offset
         
         # External
         self.__lyrics = ""
@@ -128,7 +126,6 @@ class Player:
         """
         self.mixer.pause()
         self.__playing = False
-        self.__paused_time = time.time()
 
     def resume(self):
         """
@@ -139,8 +136,6 @@ class Player:
         """
         self.mixer.unpause()
         self.__playing = True
-        self.__start_time += (time.time() - self.__paused_time)
-        self.__paused_time = 0
 
     def seek(self, to: int):
         try:
@@ -172,7 +167,6 @@ class Player:
         the time based on a shiftable start value.
         """
         return self.mixer.get_pos()/1000 + self.__offset_time
-        # return (time.time() - self.__start_time) if not self.__paused_time else (self.__paused_time - self.__start_time)
 
     def change_volume(self, by: int):
         new_vol = self.volume+by
