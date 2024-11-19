@@ -130,14 +130,17 @@ class Player:
     def resume(self):
         """
         Resume playback.
-
-        Automatically shifts the `__start_time` variable so that it matches with
-        the song after it resumes.
         """
         self.mixer.unpause()
         self.__playing = True
 
     def seek(self, to: int):
+        """
+        Move playback to a certain position, automatically adjusting the offset so that `get_time` will
+        function correctly.
+
+        Requires an integer to prevent weird mixer sync issues.
+        """
         # probably the hardest thing to implement here ;-;
         try:
             # Ensure we don't go into the negatives
@@ -161,8 +164,8 @@ class Player:
         """
         Get the current playtime in seconds.
 
-        Should be more accurate when accounting for pausing than the mixer by calculating
-        the time based on a shiftable start value.
+        Should be more accurate when accounting for pausing and seeking than the mixer by calculating
+        the time based on a shiftable offset.
         """
         return self.mixer.get_pos()/1000 + self.__offset_time
 
