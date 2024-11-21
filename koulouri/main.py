@@ -14,7 +14,7 @@ parser.add_argument("-v", "--version", help="Print Koulouri's version, then exit
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
 parser.add_argument("--add-source", help="Add a folder to your library.", action="append")
 
-VERSION = "1.3.0"
+VERSION = "2.0.0"
 
 def assemble_songs(dir):
     output = []
