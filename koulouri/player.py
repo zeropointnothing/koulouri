@@ -4,7 +4,7 @@ import pydub.utils
 from pygame import mixer
 from pygame import error as pyerr
 from tempfile import NamedTemporaryFile
-from time import sleep
+import time
 
 class Player:
     def __init__(self, rpc = None):
@@ -19,6 +19,7 @@ class Player:
         self.__playing = False # playing audio
         self.__active = False # loaded audio, ready to play
         self.__file = None
+        self.__offset_time = 0 # visual offset
         
         # External
         self.__lyrics = ""
@@ -64,6 +65,7 @@ class Player:
 
         self.__playing = True
         self.__active = True
+        self.__offset_time = 0
 
         return info
 
@@ -133,11 +135,39 @@ class Player:
         self.__playing = True
 
     def seek(self, to: int):
+        """
+        Move playback to a certain position, automatically adjusting the offset so that `get_time` will
+        function correctly.
+
+        Requires an integer to prevent weird mixer sync issues.
+        """
+        # probably the hardest thing to implement here ;-;
         try:
-            self.mixer.set_pos(to)
-            return True
+            # Ensure we don't go into the negatives
+            if to < 0:
+                return False
+
+            # adjust visual offset
+            self.__offset_time = to
+
+            # Most accurate by restarting the playback
+            self.mixer.stop()
+            self.mixer.play(start=to)
+
+            if not self.__playing: # most likely paused, so we should ensure it stays that way
+                self.mixer.pause()
+
         except pyerr:
             return False
+
+    def get_time(self) -> float:
+        """
+        Get the current playtime in seconds.
+
+        Should be more accurate when accounting for pausing and seeking than the mixer by calculating
+        the time based on a shiftable offset.
+        """
+        return self.mixer.get_pos()/1000 + self.__offset_time
 
     def change_volume(self, by: int):
         new_vol = self.volume+by
