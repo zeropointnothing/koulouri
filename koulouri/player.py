@@ -4,7 +4,7 @@ import pydub.utils
 from pygame import mixer
 from pygame import error as pyerr
 from tempfile import NamedTemporaryFile
-import time
+import json
 
 class Player:
     def __init__(self, rpc = None):

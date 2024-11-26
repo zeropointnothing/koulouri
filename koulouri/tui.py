@@ -23,7 +23,7 @@ class Window:
         curses.noecho()
         self.stdscr.keypad(True)
         song_meta = fetch_cache()
-        self.songs = sorted(song_meta, key=lambda d: d["album"])
+        self.songs = sorted(song_meta, key=lambda d: d["info"]["album"])
         paused = False
         insert = False # "insert mode"
         selected_song = None
@@ -41,10 +41,10 @@ class Window:
                 elif self.__mode == "queue":
                     view = self.queue
                 elif self.__mode == "albums":
-                    view = list(dict.fromkeys([(_["artist"], _["album"]) for _ in self.songs])) # remove duplicates
-                    view = [{"artist": _[0], "title": _[1]} for _ in view] # convert back to dicts we can use
+                    view = list(dict.fromkeys([(_["info"]["artist"], _["info"]["album"]) for _ in self.songs])) # remove duplicates
+                    view = [{"id": "", "info": {"artist": _[0], "title": _[1]}} for _ in view] # convert back to dicts we can use
                 elif self.__mode == "lyrics" and selected_song:
-                    view = self.player.fetch_lyrics(selected_song["path"])
+                    view = self.player.fetch_lyrics(selected_song["info"]["path"])
                     # view = [{"artist": "", "title": str(_)} for _ in view]
                 else:
                     view = []
@@ -77,8 +77,8 @@ class Window:
                 else:
                     # track rendering
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                        entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
-                        if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
+                        entry = f"{i+self.__offset}: {song["info"]["artist"]} - {song["info"]["title"]}"
+                        if selected_song and (selected_song == song or selected_song["info"]["album"] == song["info"]["title"]):
                             if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
                                 entry = "  " + entry
                             else:
@@ -124,11 +124,11 @@ class Window:
                             if self.__index >= k and self.__index > -1:
                                 self.__index -= 1
                         elif k in range(len(view)) and self.__mode == "albums":
-                            album = [_ for _ in self.songs if _["album"] == view[k]["title"]]
+                            album = [_ for _ in self.songs if _["info"]["album"] == view[k]["info"]["title"]]
                             if not insert:
-                                self.queue.extend(sorted(album, key=lambda d: d["track"]))
+                                self.queue.extend(sorted(album, key=lambda d: d["info"]["track"]))
                             else:
-                                self.queue[self.__index+1:] = sorted(album, key=lambda d: d["track"]) + self.queue[self.__index+1:]
+                                self.queue[self.__index+1:] = sorted(album, key=lambda d: d["info"]["track"]) + self.queue[self.__index+1:]
                         else:
                             continue
                         self.stdscr.clear()
@@ -189,8 +189,8 @@ class Window:
                     self.__index += 1
                     selected_song = self.queue[self.__index]
                     self.player.stop() # ensure that we stop anything currently playing
-                    self.player.play(selected_song["path"], selected_song["type"])
-                    song_len = selected_song["duration"]
+                    self.player.play(selected_song["info"]["path"], selected_song["info"]["type"])
+                    song_len = selected_song["info"]["duration"]
                     paused = False
                 elif (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index == len(self.queue)-1):
                     selected_song = None
@@ -214,7 +214,7 @@ class Window:
                         now_at = self.player.get_time()
                         symbol = ">" if not paused else "#"
                         prog_bar = "="*round((self.w-13)*((now_at)/song_len))
-                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
+                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["info"]["artist"]} - {selected_song["info"]["title"]}"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} {symbol}{prog_bar}"
