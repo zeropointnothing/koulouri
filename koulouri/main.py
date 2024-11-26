@@ -1,6 +1,7 @@
 import argparse
 import json
 import os, sys
+import hashlib
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # hide pygame welcome
 from player import Player
 from time import sleep, time
@@ -34,9 +35,11 @@ def generate_cache(dir):
 
     plr = Player()
 
-    for i, song in enumerate(songs):
-        tid = str(time()).split(".")[0]+str(i) # unique id for each track
-        song_meta.append({"id": tid, "info": plr.get_info(song[0], song[1])})
+    for song in songs:
+        info = plr.get_info(song[0], song[1])
+        # create a unique id for each track that can persist
+        tid = hashlib.sha256(f"{info["artist"]}{info["title"]}".encode()).hexdigest()
+        song_meta.append({"id": tid, "info": info})
 
     plr.exit()
 
@@ -193,4 +196,3 @@ if __name__ == "__main__":
         print("Your Library:")
         for i, song in enumerate(songs):
             print(f"{i} : {song["info"]["artist"]} - {song["info"]["title"]}")
-
