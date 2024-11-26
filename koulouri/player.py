@@ -218,3 +218,84 @@ class Player:
             self.__lyrics = lyrics
 
             return self.__lyrics
+
+class Data:
+    def __init__(self):
+        self.__path = "kdata.json"
+        self.__data = {}
+
+        if not os.path.exists(self.__path):
+            self.__data = {
+                "favorites": []
+            }
+            self.__sync()
+        else:
+            self.__data = self.__load()
+
+    def __sync(self):
+        """
+        Sync current memory data to disk.
+        """
+        with open(self.__path, "w") as f:
+            json.dump(self.__data, f)
+    def __load(self):
+        """
+        Load disk to memory.
+        """
+        with open(self.__path, "r") as f:
+            return json.load(f)
+
+    def add_favorite(self, tid: str):
+        """
+        Add a track to the user's favorites.
+
+        Returns False if the song is already a favorite.
+        """
+        favorites = self.__data.get("favorites", [])
+        if tid not in favorites:
+            self.__data["favorites"].append(tid)
+            self.__sync()
+            return True
+        else:
+            return False
+
+    def remove_favorite(self, tid: str):
+        """
+        Remove a track from the user's favorites.
+
+        Returns False if the track did not exist already.
+        """
+
+        favorites = self.__data.get("favorites", [])
+        if tid in favorites:
+            self.__data["favorites"].remove(tid)
+            self.__sync()
+            return True
+        else:
+            return False
+
+    def toggle_favorite(self, tid: str):
+        """
+        Helper function that automatically adds or removes a track to the user's
+        favorite.
+
+        Returns the current status of `is_favorite` after toggling.
+        """
+        is_favorite = not self.is_favorite(tid)
+
+        if is_favorite:
+            self.add_favorite(tid)
+        else:
+            self.remove_favorite(tid)
+
+        return self.is_favorite(tid)
+
+    def is_favorite(self, tid: str):
+        """
+        Fetch a favorite song by its TID, if it exists.
+        """
+        favorites = self.__data.get("favorites", [])
+        if tid in favorites:
+            return True
+        else:
+            return False
