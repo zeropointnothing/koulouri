@@ -45,13 +45,13 @@ def generate_cache(dir):
 
     return song_meta
 
-def fetch_cache(force: bool = False) -> dict:
+def fetch_cache(force: bool = False, sources: list | None = None) -> dict:
     out = []
     if not os.path.exists("songcache.json") or force:
         user = os.environ.get('USER', os.environ.get('USERNAME', "user"))
         paths = [f"/home/{user}/Music", f"C:/Users/{user}/Music"]
-        if args.add_source:
-            paths.extend(args.add_source)
+        if sources:
+            paths.extend(sources)
         print("fetching metadata...")
         for path in paths:
             try:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
 
     elif args.refresh:
-        fetch_cache(True)
+        fetch_cache(True, args.add_source)
     elif args.list:
         song_meta = fetch_cache()
         songs = sorted(song_meta, key=lambda d: d["info"]["album"])
