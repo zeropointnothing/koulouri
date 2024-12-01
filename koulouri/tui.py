@@ -1,4 +1,6 @@
 import curses
+import traceback
+import sys
 from time import sleep
 from main import fetch_cache
 from player import Player, Data
@@ -20,18 +22,18 @@ class Window:
         self.__offset = 0
 
     def main(self):
-        self.stdscr.nodelay(True)
-        curses.noecho()
-        self.stdscr.keypad(True)
-        song_meta = fetch_cache()
-        self.songs = sorted(song_meta, key=lambda d: d["info"]["album"])
-        paused = False
-        insert = False # "insert mode"
-        selected_song = None
-        lyric_scroll = True # auto scroll with lyrics
-        song_len = 0
-
         try:
+            self.stdscr.nodelay(True)
+            curses.noecho()
+            self.stdscr.keypad(True)
+            song_meta = fetch_cache()
+            self.songs = sorted(song_meta, key=lambda d: d["info"]["album"])
+            paused = False
+            insert = False # "insert mode"
+            selected_song = None
+            lyric_scroll = True # auto scroll with lyrics
+            song_len = 0
+
             while self.__running:
                 sleep(0.05)
                 k = self.stdscr.getch() # to reload xy
@@ -248,6 +250,21 @@ class Window:
             curses.echo()
             curses.endwin()
             self.stdscr.keypad(False)
+        except Exception as e:
+            self.player.stop()
+            curses.echo()
+            curses.endwin()
+            self.stdscr.keypad(False)
+
+            print("an error occured and Koulouri had to exit.")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            # Extract traceback details
+            tb = traceback.extract_tb(exc_traceback)[-1]
+            modu = tb.filename.split("/")[-1].removesuffix(".py")
+            print(f"'{exc_type.__name__}: {exc_value}' at line {tb.lineno} in module {modu}")
+            # modu = e.__traceback__.tb_frame.f_code.co_filename.split("/")[-1].removesuffix(".py")
+            # print(f"'{traceback.format_exception_only(e)[0].removesuffix("\n")}' at line {e.__traceback__.tb_lineno} in module {modu}")
+            # print()
 
     def play_single(self, index: int):
         self.__index = index
