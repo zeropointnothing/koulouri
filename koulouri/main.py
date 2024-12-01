@@ -41,8 +41,6 @@ def generate_cache(dir):
         tid = hashlib.sha256(f"{info["artist"]}{info["title"]}".encode()).hexdigest()
         song_meta.append({"id": tid, "info": info})
 
-    plr.exit()
-
     return song_meta
 
 def fetch_cache(force: bool = False, sources: list | None = None) -> dict:
