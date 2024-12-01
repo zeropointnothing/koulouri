@@ -157,6 +157,8 @@ class Player:
             if not self.__playing: # most likely paused, so we should ensure it stays that way
                 self.mixer.pause()
 
+            return True
+
         except pyerr:
             return False
 
