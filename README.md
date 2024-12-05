@@ -1,5 +1,13 @@
 # koulouri 
-a lightweight Python music player
+a lightweight Python music player.
+
+<p align=center>
+  <img alt="GitHub Release" src="https://img.shields.io/github/v/release/zeropointnothing/koulouri">
+  <img alt="Commits Since" src="https://img.shields.io/github/commits-since/zeropointnothing/koulouri/latest")>
+  <img alt="GitHub Downloads (all assets, latest release)" src="https://img.shields.io/github/downloads/zeropointnothing/koulouri/latest/total">
+</p>
+
+---
 
 ![koul_preview](https://github.com/user-attachments/assets/d3c6f4f6-ae05-4768-943b-049492fa9c7c)
 
