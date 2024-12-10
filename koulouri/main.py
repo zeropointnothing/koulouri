@@ -24,7 +24,7 @@ def assemble_songs(dir):
     for song in os.listdir(dir):
         if os.path.isdir(f"{dir}/{song}"):
             output.extend(assemble_songs(f"{dir}/{song}")) # recursive
-        elif song.split(".")[-1] in ["flac", "mp3", "wav"]:
+        elif song.split(".")[-1] in ["flac", "mp3"]:
             output.append((f"{dir}/{song}", song.split(".")[-1]))
         # print(song.split("."))
 
