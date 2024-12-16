@@ -69,6 +69,12 @@ start Koulouri using the built in TUI, powered by the Curses library.
 
 note that curses support is only likely to work on UNIX/Linux systems, and Windows users may experience issues. thus, it is only imported when this flag is supplied.
 
+### gui
+
+`-g, --gui`
+
+start Koulouri using the Qt based GUI. This is currently a work-in-progress, as I do not have much experience with Qt or GUI design in general.
+
 ## commands (tui)
 
 commands for Koulouri's built in TUI (see [tui](#tui))
