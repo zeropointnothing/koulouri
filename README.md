@@ -194,3 +194,5 @@ Koulouri wouldn't be possible without these projects <3:
 - [ffmpeg](https://github.com/FFmpeg/FFmpeg) (the actuall wav conversion) - the FFmpeg team
 - curses (tui) - Ken Arnold, AT&T, and others
 - [pypresence](https://github.com/qwertyquerty/pypresence) (Discord RPC) - QwertyQwerty
+- [qt](https://www.qt.io/) (gui framework) - Qt Team
+- [pyqt](https://www.riverbankcomputing.com/software/pyqt/) (python bindings) - PyQt Team / Riverbank Computing
