@@ -131,10 +131,10 @@ if __name__ == "__main__":
                         plr.resume()
                         paused = False
                     elif user_inp.lower() == "+":
-                        plr.change_volume(10)
+                        plr.volume = plr.volume+10
                         print(f"Volume now at {round(plr.mixer.get_volume(), 2)}")
                     elif user_inp.lower() == "-":
-                        plr.change_volume(-10)
+                        plr.volume = plr.volume-10
                         print(f"Volume now at {round(plr.mixer.get_volume(), 2)}")
 
             except KeyboardInterrupt:
@@ -180,10 +180,10 @@ if __name__ == "__main__":
                             queue_index -= 1
                             break
                         elif user_inp.lower() == "+":
-                            plr.change_volume(10)
+                            plr.volume = plr.volume+10
                             print(f"Volume now at {round(plr.mixer.get_volume(), 2)}")
                         elif user_inp.lower() == "-":
-                            plr.change_volume(-10)
+                            plr.volume = plr.volume-10
                             print(f"Volume now at {round(plr.mixer.get_volume(), 2)}")
 
                     plr.stop() # ensure the song is over

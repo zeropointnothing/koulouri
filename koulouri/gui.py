@@ -185,8 +185,7 @@ class Widget(QtWidgets.QWidget):
 
     def volchange(self, to: int):
         log.debug(f"Updating Player volume to: {to}")
-        self.player.volume = to # hacky solution, but works
-        self.player.change_volume(0) # update the mixer
+        self.player.volume = to
 
     def launch(self):
         worker = PlayerWorker()
