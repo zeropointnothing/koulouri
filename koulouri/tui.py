@@ -190,9 +190,9 @@ class Window:
                         selected_song = None
 
                 elif chr(k) == "+":
-                    self.player.change_volume(10)
+                    self.player.volume = self.player.volume+10
                 elif chr(k) == "-":
-                    self.player.change_volume(-10)
+                    self.player.volume = self.player.volume-10
                 elif chr(k) == " ":
                     paused = not paused
 

@@ -13,7 +13,7 @@ class Player:
         self.mixer = mixer.music
 
         # Settings
-        self.volume = 100
+        self.__volume = 100
 
         # Status
         self.__playing = False # playing audio
@@ -26,6 +26,23 @@ class Player:
         self.__rpc = rpc
 
         pass
+
+    @property
+    def volume(self) -> int:
+        """
+        An int between 0 and 100.
+        """
+        return self.__volume
+
+    @volume.setter
+    def volume(self, new_vol: int):
+        if new_vol <= 0:
+            new_vol = 0
+        elif new_vol >= 100:
+            new_vol = 100
+        
+        self.__volume = new_vol
+        self.mixer.set_volume(new_vol/100)
 
     def play(self, path: str, input_format: str):
         """
@@ -170,17 +187,6 @@ class Player:
         the time based on a shiftable offset.
         """
         return self.mixer.get_pos()/1000 + self.__offset_time
-
-    def change_volume(self, by: int):
-        new_vol = self.volume+by
-
-        if new_vol <= 0:
-            new_vol = 0
-        elif new_vol >= 100:
-            new_vol = 100
-
-        self.volume = new_vol
-        self.mixer.set_volume(new_vol/100)
 
     def is_playing(self):
         """
