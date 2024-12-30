@@ -1,12 +1,15 @@
 import curses
+import traceback
+import sys
 from time import sleep
 from main import fetch_cache
-from player import Player
+from player import Player, Data
 
 class Window:
     def __init__(self, player: Player, stdscr: curses.window):
         self.stdscr = stdscr
         self.player = player
+        self.data = Data()
         self.songs = []
         self.queue = []
 
@@ -19,18 +22,18 @@ class Window:
         self.__offset = 0
 
     def main(self):
-        self.stdscr.nodelay(True)
-        curses.noecho()
-        self.stdscr.keypad(True)
-        song_meta = fetch_cache()
-        self.songs = sorted(song_meta, key=lambda d: d["album"])
-        paused = False
-        insert = False # "insert mode"
-        selected_song = None
-        lyric_scroll = True # auto scroll with lyrics
-        song_len = 0
-
         try:
+            self.stdscr.nodelay(True)
+            curses.noecho()
+            self.stdscr.keypad(True)
+            song_meta = fetch_cache()
+            self.songs = sorted(song_meta, key=lambda d: d["info"]["album"])
+            paused = False
+            insert = False # "insert mode"
+            selected_song = None
+            lyric_scroll = True # auto scroll with lyrics
+            song_len = 0
+
             while self.__running:
                 sleep(0.05)
                 k = self.stdscr.getch() # to reload xy
@@ -41,10 +44,12 @@ class Window:
                 elif self.__mode == "queue":
                     view = self.queue
                 elif self.__mode == "albums":
-                    view = list(dict.fromkeys([(_["artist"], _["album"]) for _ in self.songs])) # remove duplicates
-                    view = [{"artist": _[0], "title": _[1]} for _ in view] # convert back to dicts we can use
+                    view = list(dict.fromkeys([(_["info"]["artist"], _["info"]["album"]) for _ in self.songs])) # remove duplicates
+                    view = [{"id": "", "info": {"artist": _[0], "title": _[1]}} for _ in view] # convert back to dicts we can use
+                elif self.__mode == "favorites":
+                    view = [_ for _ in self.songs if self.data.is_favorite(_["id"])]
                 elif self.__mode == "lyrics" and selected_song:
-                    view = self.player.fetch_lyrics(selected_song["path"])
+                    view = self.player.fetch_lyrics(selected_song["info"]["path"])
                     # view = [{"artist": "", "title": str(_)} for _ in view]
                 else:
                     view = []
@@ -77,8 +82,8 @@ class Window:
                 else:
                     # track rendering
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                        entry = f"{i+self.__offset}: {song["artist"]} - {song["title"]}"
-                        if selected_song and (selected_song == song or selected_song["album"] == song["title"]):
+                        entry = f"{i+self.__offset}: {song["info"]["artist"]} - {song["info"]["title"]}"
+                        if selected_song and (selected_song == song or selected_song["info"]["album"] == song["info"]["title"]):
                             if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
                                 entry = "  " + entry
                             else:
@@ -115,8 +120,8 @@ class Window:
                     try:
                         k = int(self.__user_inp)
                         self.__user_inp = ""
-                        if k in range(len(self.songs)) and self.__mode == "tracks":
-                            self.queue.append(self.songs[k]) if not insert else self.queue.insert(self.__index+1, self.songs[k])
+                        if k in range(len(view)) and self.__mode in ["tracks", "favorites"]:
+                            self.queue.append(view[k]) if not insert else self.queue.insert(self.__index+1, view[k])
                         elif k in range(len(self.queue)) and self.__mode == "queue":
                             self.queue.remove(self.queue[k])
 
@@ -124,11 +129,11 @@ class Window:
                             if self.__index >= k and self.__index > -1:
                                 self.__index -= 1
                         elif k in range(len(view)) and self.__mode == "albums":
-                            album = [_ for _ in self.songs if _["album"] == view[k]["title"]]
+                            album = [_ for _ in self.songs if _["info"]["album"] == view[k]["info"]["title"]]
                             if not insert:
-                                self.queue.extend(sorted(album, key=lambda d: d["track"]))
+                                self.queue.extend(sorted(album, key=lambda d: d["info"]["track"]))
                             else:
-                                self.queue[self.__index+1:] = sorted(album, key=lambda d: d["track"]) + self.queue[self.__index+1:]
+                                self.queue[self.__index+1:] = sorted(album, key=lambda d: d["info"]["track"]) + self.queue[self.__index+1:]
                         else:
                             continue
                         self.stdscr.clear()
@@ -156,6 +161,17 @@ class Window:
                     lyric_scroll = True # reset auto scroll
                     self.__offset = 0
                     self.stdscr.clear()
+                elif chr(k) == "f":
+                    self.__mode = "favorites"
+                    self.__offset = 0
+                    self.stdscr.clear()
+                elif chr(k) == "*":
+                    if not self.__user_inp and selected_song:
+                        self.data.toggle_favorite(selected_song["id"])
+                    if self.__mode in ["tracks", "favorites"] and (self.__user_inp and int(self.__user_inp) in range(len(view))):
+                        self.data.toggle_favorite(view[int(self.__user_inp)]["id"])
+                        self.__user_inp = ""
+                    self.stdscr.clear()
                 elif chr(k) == "i":
                     insert = not insert
                 elif chr(k) == "n":
@@ -174,9 +190,9 @@ class Window:
                         selected_song = None
 
                 elif chr(k) == "+":
-                    self.player.change_volume(10)
+                    self.player.volume = self.player.volume+10
                 elif chr(k) == "-":
-                    self.player.change_volume(-10)
+                    self.player.volume = self.player.volume-10
                 elif chr(k) == " ":
                     paused = not paused
 
@@ -189,8 +205,8 @@ class Window:
                     self.__index += 1
                     selected_song = self.queue[self.__index]
                     self.player.stop() # ensure that we stop anything currently playing
-                    self.player.play(selected_song["path"], selected_song["type"])
-                    song_len = selected_song["duration"]
+                    self.player.play(selected_song["info"]["path"], selected_song["info"]["type"])
+                    song_len = selected_song["info"]["duration"]
                     paused = False
                 elif (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index == len(self.queue)-1):
                     selected_song = None
@@ -212,9 +228,10 @@ class Window:
                         # progress bar / now playing
                         # now_at = self.player.mixer.get_pos()/1000
                         now_at = self.player.get_time()
+                        is_favorite = "*" if self.data.is_favorite(selected_song["id"]) else ""
                         symbol = ">" if not paused else "#"
-                        prog_bar = "="*round((self.w-13)*((now_at)/song_len))
-                        now_playing = f"{self.__index+1} of {len(self.queue)}, {selected_song["artist"]} - {selected_song["title"]}"
+                        prog_bar = "="*round((self.w-14)*((now_at)/song_len))
+                        now_playing = f"{self.__index+1} of {len(self.queue)}, {is_favorite}{selected_song["info"]["artist"]} - {selected_song["info"]["title"]}"
                         nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} {symbol}{prog_bar}"
@@ -233,6 +250,21 @@ class Window:
             curses.echo()
             curses.endwin()
             self.stdscr.keypad(False)
+        except Exception as e:
+            self.player.stop()
+            curses.echo()
+            curses.endwin()
+            self.stdscr.keypad(False)
+
+            print("an error occured and Koulouri had to exit.")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            # Extract traceback details
+            tb = traceback.extract_tb(exc_traceback)[-1]
+            modu = tb.filename.split("/")[-1].removesuffix(".py")
+            print(f"'{exc_type.__name__}: {exc_value}' at line {tb.lineno} in module {modu}")
+            # modu = e.__traceback__.tb_frame.f_code.co_filename.split("/")[-1].removesuffix(".py")
+            # print(f"'{traceback.format_exception_only(e)[0].removesuffix("\n")}' at line {e.__traceback__.tb_lineno} in module {modu}")
+            # print()
 
     def play_single(self, index: int):
         self.__index = index

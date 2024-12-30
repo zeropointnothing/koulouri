@@ -1,31 +1,29 @@
-import pydub
+import pydub, pydub.utils, pyaudio
 import os, sys
-import pydub.utils
-from pygame import mixer
-from pygame import error as pyerr
-from tempfile import NamedTemporaryFile
+import threading, time
+import logging
 import json
+from tempfile import NamedTemporaryFile
+
+logging.basicConfig(level=logging.DEBUG, filename="test.txt")
 
 class Player:
     def __init__(self, rpc = None):
-        mixer.init()
         
-        self.mixer = mixer.music
-
         # Settings
         self.__volume = 100
 
-        # Status
         self.__playing = False # playing audio
-        self.__active = False # loaded audio, ready to play
+        self.__paused = False
         self.__file = None
         self.__offset_time = 0 # visual offset
-        
-        # External
+
         self.__lyrics = ""
         self.__rpc = rpc
 
-        pass
+        self.__audio = pyaudio.PyAudio()
+        self.__audio_stream = None
+        self.__audio_thread = None
 
     @property
     def volume(self) -> int:
@@ -42,49 +40,39 @@ class Player:
             new_vol = 100
         
         self.__volume = new_vol
-        self.mixer.set_volume(new_vol/100)
 
-    def play(self, path: str, input_format: str):
+
+    def _write_audio(self):
         """
-        Load a file into memory and start playback.
+        Write audio into the stream.
 
-        Automatically converts the input file into a wav, storing it temporarily inside of
-        the system's temp folder via `tempfile`.
-
-        Returns song information.
+        Automatically adjusts the volume of the audio before writing it into the stream.
         """
-        tmp = NamedTemporaryFile(prefix="koulouri-conv_") # create a temp file to write the conversion to
-        
-        if sys.platform == "win32":
-            tmp.delete = False # windows support
-            tmp.close()
+        with open(self.__file.name, "rb") as f:
+            data = f.read(1024)
+            while self.__playing:
+                if self.__paused:
+                    time.sleep(0.1)
+                    continue
+                # while data:
 
-        self.__file = tmp
-        # print(tmp.name)
+                adjusted_data = bytearray()
 
-        audio = pydub.AudioSegment.from_file(path, input_format)
-        info = self.get_info(path, input_format)
+                if data:
+                    # adjust volume
+                    for i in range(0, len(data), 2):  # Process two bytes at a time (16-bit PCM)
+                        # Read two bytes (16-bit audio)
+                        sample = int.from_bytes(data[i:i+2], byteorder='little', signed=True)
+                        
+                        # Adjust the volume by scaling the sample
+                        adjusted_sample = int(sample * (self.__volume/100))
 
-        if self.__rpc: # update RPC stats
-            if not self.__rpc.is_alive():
-                self.__rpc.start()
+                        # Clip to valid 16-bit range and append to the adjusted audio
+                        adjusted_sample = max(min(adjusted_sample, 32767), -32768)
+                        adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
 
-            self.__rpc.title = info["title"]
-            self.__rpc.artist = info["artist"]
-            self.__rpc.album = info["album"]
-
-        audio.export(self.__file.name, "wav")
-        # audio.export(self.__file, "wav")
-
-
-        self.mixer.load(self.__file.name)
-        self.mixer.play()
-
-        self.__playing = True
-        self.__active = True
-        self.__offset_time = 0
-
-        return info
+                self.__audio_stream.write(bytes(adjusted_data))
+                data = f.read(1024)
 
     def get_info(self, path: str, type: str):
         # fetch metadata
@@ -111,12 +99,49 @@ class Player:
 
         return {"path": path, "type": type, "duration": duration, "artist": artist, "album_artist": album_artist, "album": album, "title": title, "genre": genre, "track": track}
     
+    def play(self, path: str, input_format: str):
+        """
+        Load a file into memory and start playback.
+
+        Automatically converts the input file into a wav, storing it temporarily inside of
+        the system's temp folder via `tempfile`.
+        """
+        tmp = NamedTemporaryFile(prefix="koulouri-conv_")
+
+        if sys.platform == "win32":
+            tmp.delete = False
+            tmp.close()
+
+        self.__file = tmp
+
+        audio = pydub.AudioSegment.from_file(path, input_format).set_channels(2).set_sample_width(2)
+        info = self.get_info(path, input_format)
+
+        audio.export(self.__file.name, "wav")
+
+        self.__audio_stream = self.__audio.open(format=pyaudio.paInt16,
+                channels=2,
+                rate=audio.frame_rate, # adapting early may avoid us headaches
+                output=True,
+                frames_per_buffer=1024)
+
+        self.__playing = True
+
+        self.__audio_thread = threading.Thread(target=self._write_audio)
+        self.__audio_thread.start()
+        # self.__audio_stream.stop_stream()
+        # self.__audio_stream.close()
+
+        return info
+
     def stop(self):
-        """
-        Stop playback and close the input file, if necessary.
-        """
-        self.mixer.stop()
-        self.mixer.unload()
+        self.__playing = False
+        if self.__audio_thread:
+            self.__audio_thread.join() # wait for the writer to stop writing
+        
+        if self.__audio_stream:
+            self.__audio_stream.stop_stream()
+            # self.__audio_stream.close()
 
         if self.__file and not self.__file.closed: # ensure temp files are closed properly
             self.__file.close()
@@ -126,81 +151,19 @@ class Player:
 
         self.__lyrics = ""
         self.__file = None
-        self.__playing = False
         self.__active = False
 
-    def exit(self):
-        """
-        Exit the mixer.
-
-        Useful if you only need the player for info gathering.
-        """
-        mixer.quit()
-
     def pause(self):
-        """
-        Pause playback.
-        """
-        self.mixer.pause()
-        self.__playing = False
+        self.__paused = True
 
     def resume(self):
-        """
-        Resume playback.
-        """
-        self.mixer.unpause()
-        self.__playing = True
+        self.__paused = False
 
     def seek(self, to: int):
-        """
-        Move playback to a certain position, automatically adjusting the offset so that `get_time` will
-        function correctly.
-
-        Requires an integer to prevent weird mixer sync issues.
-        """
-        # probably the hardest thing to implement here ;-;
-        try:
-            # Ensure we don't go into the negatives
-            if to < 0:
-                return False
-
-            # adjust visual offset
-            self.__offset_time = to
-
-            # Most accurate by restarting the playback
-            self.mixer.stop()
-            self.mixer.play(start=to)
-
-            if not self.__playing: # most likely paused, so we should ensure it stays that way
-                self.mixer.pause()
-
-            return True
-
-        except pyerr:
-            return False
-
-    def get_time(self) -> float:
-        """
-        Get the current playtime in seconds.
-
-        Should be more accurate when accounting for pausing and seeking than the mixer by calculating
-        the time based on a shiftable offset.
-        """
-        return self.mixer.get_pos()/1000 + self.__offset_time
-
-    def is_playing(self):
-        """
-        Whether or not the player is currently playing.
-
-        Returns a tuple of the `Player` status and the status reported by PyGame. These should match.
-        """
-        return (self.__playing, self.mixer.get_busy())
+        ...
     
-    def is_active(self):
-        """
-        Whether or not the player has a file loaded and ready to play.
-        """
-        return self.__active
+    def get_time(self) -> float:
+        return 0.0
     
     def fetch_lyrics(self, path: str):
         lyric_file = path.split(".")[0]+".lrc"
@@ -226,6 +189,26 @@ class Player:
             self.__lyrics = lyrics
 
             return self.__lyrics
+
+    def is_playing(self) -> tuple[bool, bool]:
+        """
+        Whether or not the player is playing audio.
+
+        Returns a tuple of the `Player` status and the `pyaudio.Stream` status.
+        """
+        if self.__audio_stream:
+            act = self.__audio_stream.is_active()
+        else:
+            act = False
+
+        return (self.__playing, act)
+
+    def is_active(self) -> bool: # compat?
+        if self.__audio_thread:
+            return self.__audio_thread.is_alive()
+        else:
+            return False
+
 
 class Data:
     def __init__(self):
@@ -307,3 +290,24 @@ class Data:
             return True
         else:
             return False
+
+
+# test = Player()
+
+# test.play("/home/exii/Music/s777n/remains of a corrupted file/s777n - remains of a corrupted file.flac", "flac")
+# time.sleep(3)
+# test.pause()
+# test.volume = 20
+# time.sleep(3)
+# test.resume()
+# time.sleep(1)
+# test.volume = 150
+# print(test.volume)
+# time.sleep(1)
+# test.stop()
+# time.sleep(3)
+
+# test.play("/home/exii/Music/Catarinth/Catarinth - River Fallen/Catarinth - River Fallen - 02 River Fallen (Orchestral Version).flac", "flac")
+# time.sleep(8)
+# test.stop()
+# time.sleep(3)
