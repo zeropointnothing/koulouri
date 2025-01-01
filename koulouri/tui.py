@@ -214,7 +214,7 @@ class Window:
 
                 try:
                     volume = self.player.volume
-                    title_str = f"koulouri  / [{volume}%] / {self.__mode.upper()}"
+                    title_str = f"koulouri  / [{volume}%] /  {self.__mode}"
                     title_mid = (self.w//2)-(len(title_str)//2)
                     self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it
                     self.stdscr.clrtoeol()
