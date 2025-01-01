@@ -17,6 +17,7 @@ class Player:
         self.__paused = False
         self.__file = None
         self.__time = 0
+        self.__seek_to = 0
         self.__offset_time = 0 # visual offset
 
         self.__lyrics = ""
@@ -63,6 +64,12 @@ class Player:
                 # while data:
 
                 adjusted_data = bytearray()
+
+                if self.__seek_to:
+                    f.seek(1024*(self.__seek_to), 1)
+                    self.__time += 1024*self.__seek_to / (bytes_per_sample * channels * self.__audio_samprate)
+                    self.__seek_to = 0
+                    self.__time = 0 if self.__time < 0 else self.__time
 
                 if data:
                     # adjust volume
@@ -175,7 +182,7 @@ class Player:
         self.__paused = False
 
     def seek(self, to: int):
-        ...
+        self.__seek_to = 150
     
     def get_time(self) -> float:
         return self.__time
