@@ -16,6 +16,7 @@ class Player:
         self.__playing = False # playing audio
         self.__paused = False
         self.__file = None
+        self.__time = 0
         self.__offset_time = 0 # visual offset
 
         self.__lyrics = ""
@@ -24,6 +25,9 @@ class Player:
         self.__audio = pyaudio.PyAudio()
         self.__audio_stream = None
         self.__audio_thread = None
+
+        self.__count_last = 0
+        self.__count_thread = None
 
     @property
     def volume(self) -> int:
@@ -41,6 +45,15 @@ class Player:
         
         self.__volume = new_vol
 
+    def __count_seconds(self):
+        self.__time = 0
+        while self.__playing:
+            if self.__paused:
+                time.sleep(0.001)
+                continue
+
+            time.sleep(0.005)
+            self.__time += 0.005
 
     def _write_audio(self):
         """
@@ -52,7 +65,7 @@ class Player:
             data = f.read(1024)
             while self.__playing:
                 if self.__paused:
-                    time.sleep(0.1)
+                    time.sleep(0.001)
                     continue
                 # while data:
 
@@ -129,6 +142,8 @@ class Player:
 
         self.__audio_thread = threading.Thread(target=self._write_audio)
         self.__audio_thread.start()
+        self.__count_thread = threading.Thread(target=self.__count_seconds, daemon=True)
+        self.__count_thread.start()
         # self.__audio_stream.stop_stream()
         # self.__audio_stream.close()
 
@@ -138,7 +153,9 @@ class Player:
         self.__playing = False
         if self.__audio_thread:
             self.__audio_thread.join() # wait for the writer to stop writing
-        
+        if self.__count_thread:
+            self.__count_thread.join()
+
         if self.__audio_stream:
             self.__audio_stream.stop_stream()
             # self.__audio_stream.close()
@@ -163,7 +180,7 @@ class Player:
         ...
     
     def get_time(self) -> float:
-        return 0.0
+        return self.__time
     
     def fetch_lyrics(self, path: str):
         lyric_file = path.split(".")[0]+".lrc"
