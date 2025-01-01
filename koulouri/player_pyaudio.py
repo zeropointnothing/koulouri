@@ -25,9 +25,7 @@ class Player:
         self.__audio = pyaudio.PyAudio()
         self.__audio_stream = None
         self.__audio_thread = None
-
-        self.__count_last = 0
-        self.__count_thread = None
+        self.__audio_samprate = 44100
 
     @property
     def volume(self) -> int:
@@ -45,16 +43,6 @@ class Player:
         
         self.__volume = new_vol
 
-    def __count_seconds(self):
-        self.__time = 0
-        while self.__playing:
-            if self.__paused:
-                time.sleep(0.001)
-                continue
-
-            time.sleep(0.005)
-            self.__time += 0.005
-
     def _write_audio(self):
         """
         Write audio into the stream.
@@ -63,6 +51,11 @@ class Player:
         """
         with open(self.__file.name, "rb") as f:
             data = f.read(1024)
+
+            bytes_per_sample = 2  # 16-bit PCM
+            channels = 2
+            self.__time = 0 # reset timer
+    
             while self.__playing:
                 if self.__paused:
                     time.sleep(0.001)
@@ -84,8 +77,16 @@ class Player:
                         adjusted_sample = max(min(adjusted_sample, 32767), -32768)
                         adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
 
-                self.__audio_stream.write(bytes(adjusted_data))
-                data = f.read(1024)
+                    self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
+                    self.__audio_stream.write(bytes(adjusted_data))
+                    data = f.read(1024)
+                else:
+                    try:
+                        self.stop()
+                    except RuntimeError: # can't join ourself
+                        pass
+                    break
+
 
     def get_info(self, path: str, type: str):
         # fetch metadata
@@ -128,6 +129,7 @@ class Player:
         self.__file = tmp
 
         audio = pydub.AudioSegment.from_file(path, input_format).set_channels(2).set_sample_width(2)
+        self.__audio_samprate = audio.frame_rate
         info = self.get_info(path, input_format)
 
         audio.export(self.__file.name, "wav")
@@ -142,8 +144,6 @@ class Player:
 
         self.__audio_thread = threading.Thread(target=self._write_audio)
         self.__audio_thread.start()
-        self.__count_thread = threading.Thread(target=self.__count_seconds, daemon=True)
-        self.__count_thread.start()
         # self.__audio_stream.stop_stream()
         # self.__audio_stream.close()
 
@@ -153,8 +153,6 @@ class Player:
         self.__playing = False
         if self.__audio_thread:
             self.__audio_thread.join() # wait for the writer to stop writing
-        if self.__count_thread:
-            self.__count_thread.join()
 
         if self.__audio_stream:
             self.__audio_stream.stop_stream()
