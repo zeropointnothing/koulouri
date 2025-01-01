@@ -157,6 +157,14 @@ class Player:
                 output=True,
                 frames_per_buffer=1024)
 
+        if self.__rpc: # update RPC stats
+            if not self.__rpc.is_alive():
+                self.__rpc.start()
+
+            self.__rpc.title = info["title"]
+            self.__rpc.artist = info["artist"]
+            self.__rpc.album = info["album"]
+
         self.__playing = True
 
         self.__audio_thread = threading.Thread(target=self._write_audio)
