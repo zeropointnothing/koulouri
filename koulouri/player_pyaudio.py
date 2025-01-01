@@ -82,7 +82,7 @@ class Player:
                     data = f.read(1024)
                 else:
                     try:
-                        self.stop()
+                        self.stop(False)
                     except RuntimeError: # can't join ourself
                         pass
                     break
@@ -149,9 +149,9 @@ class Player:
 
         return info
 
-    def stop(self):
+    def stop(self, join: bool = True) -> None:
         self.__playing = False
-        if self.__audio_thread:
+        if self.__audio_thread and join:
             self.__audio_thread.join() # wait for the writer to stop writing
 
         if self.__audio_stream:
