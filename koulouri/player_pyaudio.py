@@ -66,10 +66,20 @@ class Player:
                 adjusted_data = bytearray()
 
                 if self.__seek_to:
-                    f.seek(1024*(self.__seek_to), 1)
-                    self.__time += 1024*self.__seek_to / (bytes_per_sample * channels * self.__audio_samprate)
+                    # Calculate the byte position from the time in seconds
+                    byte_position = int(self.__seek_to * bytes_per_sample * channels * self.__audio_samprate)
+                    
+                    if byte_position < 0: # can't go under 0!
+                        pass
+                    elif byte_position > os.path.getsize(self.__file.name): # don't go over!
+                        pass
+                    else:
+                        # Seek the file to the calculated byte position
+                        f.seek(byte_position, 0)
+                        
+                        # Update the time to reflect the new position
+                        self.__time = self.__seek_to
                     self.__seek_to = 0
-                    self.__time = 0 if self.__time < 0 else self.__time
 
                 if data:
                     # adjust volume
@@ -182,7 +192,7 @@ class Player:
         self.__paused = False
 
     def seek(self, to: int):
-        self.__seek_to = 150
+        self.__seek_to = to
     
     def get_time(self) -> float:
         return self.__time
