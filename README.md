@@ -9,7 +9,8 @@ a lightweight Python music player.
 
 ---
 
-![koul_preview](https://github.com/user-attachments/assets/d3c6f4f6-ae05-4768-943b-049492fa9c7c)
+![koul_preview](https://github.com/user-attachments/assets/03050e10-23ac-4491-9824-b3cbe86e8af3)
+
 
 ## Discord RPC (source code only)
 
