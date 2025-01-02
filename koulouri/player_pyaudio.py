@@ -8,8 +8,15 @@ from tempfile import NamedTemporaryFile
 logging.basicConfig(level=logging.DEBUG, filename="test.txt")
 
 class Player:
+    """
+    Alternate player backend using `pyaudio` instead of `pygame.mixer` to play audio.
+
+    May be more reliable than PyGame, due to the writer thread's direct control over the audio stream
+    allowing for per-chunk data analysis and manipulation, however, may use more CPU due to
+    math applied to the audio data (volume adjustment).
+    """
     def __init__(self, rpc = None):
-        
+
         # Settings
         self.__volume = 100
 
