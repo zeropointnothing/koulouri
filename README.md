@@ -1,6 +1,8 @@
 # koulouri 
 a lightweight Python music player.
 
+simple by design, letting you listen to your music without any distractions or unwanted features.
+
 <p align=center>
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/zeropointnothing/koulouri">
   <img alt="Commits Since" src="https://img.shields.io/github/commits-since/zeropointnothing/koulouri/latest")>
@@ -20,6 +22,10 @@ to enable RPC, run the following commands:
 - `pip install requests`
 
 - `pip install https://github.com/qwertyquerty/pypresence/archive/master.zip`
+
+## Supported Formats
+
+Koulouri technically supports all modern audio formats, since it converts them into WAV before playing using FFMpeg. However, Koulouri will only recognize files ending with a `.mp3` and `.flac` extension due to the varying nature in metadata tag structure. More support can (and will) be added for other formats, just make an Issue!
 
 ## commands (terminal)
 
