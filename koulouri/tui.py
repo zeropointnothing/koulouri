@@ -31,6 +31,7 @@ class Window:
             paused = False
             insert = False # "insert mode"
             selected_song = None
+            song_filter = ""
             lyric_scroll = True # auto scroll with lyrics
             song_len = 0
 
@@ -53,6 +54,10 @@ class Window:
                     # view = [{"artist": "", "title": str(_)} for _ in view]
                 else:
                     view = []
+
+                # filter view
+                if self.__mode in ["tracks"] and song_filter:
+                    view = [_ for _ in view if song_filter == _["info"]["album"]]
 
                 # lyrics rendering:
                 if self.__mode == "lyrics":
@@ -94,7 +99,15 @@ class Window:
                         self.stdscr.addstr(i+1, 0, entry_trimmed)
                         self.stdscr.clrtoeol()
 
-                userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
+                if insert and song_filter:
+                    userinpstr = f"[E|I]: {song_filter}/{self.__user_inp}"
+                elif insert:
+                    userinpstr = f"[I]: {self.__user_inp}"
+                elif song_filter:
+                    userinpstr = f"[E]: {song_filter}/{self.__user_inp}"
+                else:
+                    userinpstr = f": {self.__user_inp}"
+                # userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
                 self.stdscr.addstr(self.h-3, 0, userinpstr)
                 self.stdscr.clrtoeol()
 
@@ -156,6 +169,8 @@ class Window:
                     self.__mode = "albums"
                     self.__offset = 0
                     self.stdscr.clear()
+
+                    song_filter = ""
                 elif chr(k) == "l":
                     self.__mode = "lyrics"
                     lyric_scroll = True # reset auto scroll
@@ -163,6 +178,21 @@ class Window:
                     self.stdscr.clear()
                 elif chr(k) == "f":
                     self.__mode = "favorites"
+                    self.__offset = 0
+                    self.stdscr.clear()
+                elif chr(k) == "e":
+                    if not self.__user_inp:
+                        song_filter = ""
+                    elif self.__mode == "tracks":
+                        song_filter = view[int(self.__user_inp)]["info"]["album"]
+                    elif self.__mode == "albums":
+                        song_filter = view[int(self.__user_inp)]["info"]["title"]
+                        self.__mode = "tracks" # the only view that will properly show tracks
+                    elif self.__mode == "favorites":
+                        song_filter = view[int(self.__user_inp)]["info"]["album"]
+                        self.__mode = "tracks"
+
+                    self.__user_inp = ""
                     self.__offset = 0
                     self.stdscr.clear()
                 elif chr(k) == "*":
