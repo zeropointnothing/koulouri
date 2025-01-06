@@ -1,4 +1,4 @@
-import pydub, pydub.utils, pyaudio
+import pydub, pydub.utils, pyaudio, wave
 import os, sys
 import threading, time
 import logging
@@ -51,65 +51,64 @@ class Player:
         
         self.__volume = new_vol
 
-    def _write_audio(self):
+    def _write_audio(self, wf: wave.Wave_read):
         """
         Write audio into the stream.
 
         Automatically adjusts the volume of the audio before writing it into the stream.
         """
-        with open(self.__file.name, "rb") as f:
-            data = f.read(1024)
+        bytes_per_sample = wf.getsampwidth()
+        channels = wf.getnchannels()
+        self.__time = 0 # reset timer
 
-            bytes_per_sample = 2  # 16-bit PCM
-            channels = 2
-            self.__time = 0 # reset timer
-    
-            while self.__playing:
-                if self.__paused:
-                    time.sleep(0.001)
-                    continue
-                # while data:
+        data = wf.readframes(1024)
 
-                adjusted_data = bytearray()
-
-                if self.__seek_to:
-                    # Calculate the byte position from the time in seconds
-                    byte_position = int(self.__seek_to * bytes_per_sample * channels * self.__audio_samprate)
-                    
-                    if byte_position < 0: # can't go under 0!
-                        pass
-                    elif byte_position > os.path.getsize(self.__file.name): # don't go over!
-                        pass
-                    else:
-                        # Seek the file to the calculated byte position
-                        f.seek(byte_position, 0)
-                        
-                        # Update the time to reflect the new position
-                        self.__time = self.__seek_to
-                    self.__seek_to = 0
-
-                if data:
-                    # adjust volume
-                    for i in range(0, len(data), 2):  # Process two bytes at a time (16-bit PCM)
-                        # Read two bytes (16-bit audio)
-                        sample = int.from_bytes(data[i:i+2], byteorder='little', signed=True)
-                        
-                        # Adjust the volume by scaling the sample
-                        adjusted_sample = int(sample * (self.__volume/100))
-
-                        # Clip to valid 16-bit range and append to the adjusted audio
-                        adjusted_sample = max(min(adjusted_sample, 32767), -32768)
-                        adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
-
-                    self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
-                    self.__audio_stream.write(bytes(adjusted_data))
-                    data = f.read(1024)
+        while self.__playing:
+            if self.__seek_to:
+                # Calculate the byte position from the time in seconds
+                byte_position = int(self.__seek_to * bytes_per_sample * channels * self.__audio_samprate)
+                
+                if byte_position < 0: # can't go under 0!
+                    pass
+                elif byte_position > os.path.getsize(self.__file.name): # don't go over!
+                    pass
                 else:
-                    try:
-                        self.stop(False)
-                    except RuntimeError: # can't join ourself
-                        pass
-                    break
+                    # Seek the file to the calculated byte position
+                    # the wave module expects frame position, so some extra math is needed.
+                    wf.setpos(byte_position // (bytes_per_sample * channels))
+                    
+                    # Update the time to reflect the new position
+                    self.__time = self.__seek_to
+                self.__seek_to = 0
+
+            if self.__paused:
+                time.sleep(0.001)
+                continue
+
+            adjusted_data = bytearray()
+
+            if data:
+                # adjust volume
+                for i in range(0, len(data), 2):  # Process two bytes at a time (16-bit PCM)
+                    # Read two bytes (16-bit audio)
+                    sample = int.from_bytes(data[i:i+2], byteorder='little', signed=True)
+                    
+                    # Adjust the volume by scaling the sample
+                    adjusted_sample = int(sample * (self.__volume/100))
+
+                    # Clip to valid 16-bit range and append to the adjusted audio
+                    adjusted_sample = max(min(adjusted_sample, 32767), -32768)
+                    adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
+
+                self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
+                self.__audio_stream.write(bytes(adjusted_data))
+                data = wf.readframes(1024)
+            else:
+                try:
+                    self.stop(False)
+                except RuntimeError: # can't join ourself
+                    pass
+                break
 
 
     def get_info(self, path: str, type: str):
@@ -158,9 +157,11 @@ class Player:
 
         audio.export(self.__file.name, "wav")
 
+        wf = wave.open(self.__file.name, "rb") # we shouldn't be reading headers
+
         self.__audio_stream = self.__audio.open(format=pyaudio.paInt16,
-                channels=2,
-                rate=audio.frame_rate, # adapting early may avoid us headaches
+                channels=wf.getnchannels(),
+                rate=wf.getframerate(), # adapting early may avoid us headaches
                 output=True,
                 frames_per_buffer=1024)
 
@@ -174,7 +175,7 @@ class Player:
 
         self.__playing = True
 
-        self.__audio_thread = threading.Thread(target=self._write_audio)
+        self.__audio_thread = threading.Thread(target=self._write_audio, args=(wf,))
         self.__audio_thread.start()
         # self.__audio_stream.stop_stream()
         # self.__audio_stream.close()
