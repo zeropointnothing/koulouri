@@ -141,6 +141,18 @@ the default view.
 
 switches Koulouri's mode to `TRACKS`. will display every song Koulouri is aware of inside its `songcache`.
 
+### filter/"enter" view
+
+`e`
+
+when in supported views (TRACKS/FAVORITES), applies a filter to the `TRACKS` view, displaying only the selected album.
+
+functions like [submit](#submit), taking a track number as input.
+
+note, that in certain views (ALBUMS/FAVORITES), Koulouri will automatically switch you to the `TRACKS` view upon enabling the filter. the filter will remain active until you disable it, and is indicated by `[E]` symbol followed by the album name.
+
+to disable, simply press `e` once more without any user input.
+
 ### lyrics view
 
 `l`
