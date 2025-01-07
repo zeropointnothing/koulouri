@@ -3,7 +3,7 @@ import json
 import os, sys
 import hashlib
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # hide pygame welcome
-from player import Player
+from player_pyaudio import Player
 from time import sleep, time
 
 parser = argparse.ArgumentParser()

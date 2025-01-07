@@ -3,7 +3,7 @@ import traceback
 import sys
 from time import sleep
 from main import fetch_cache
-from player import Player, Data
+from player_pyaudio import Player, Data
 
 class Window:
     def __init__(self, player: Player, stdscr: curses.window):

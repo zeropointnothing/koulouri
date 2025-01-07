@@ -7,7 +7,7 @@ log.basicConfig(level=log.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 from PyQt5 import QtCore, QtWidgets
-from player import Player
+from player_pyaudio import Player
 from main import fetch_cache, VERSION
 
 
