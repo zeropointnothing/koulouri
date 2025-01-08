@@ -25,7 +25,7 @@ to enable RPC, run the following commands:
 
 ## Supported Formats
 
-Koulouri technically supports all modern audio formats, since it converts them into WAV before playing using FFMpeg. However, Koulouri will only recognize files ending with a `.mp3` and `.flac` extension due to the varying nature in metadata tag structure. More support can (and will) be added for other formats, just make an Issue!
+Koulouri technically supports all modern audio formats, since it converts them into WAV before playing using FFMpeg. however, Koulouri will only recognize files ending with a `.mp3` and `.flac` extension due to the varying nature in metadata tag structure. more support can (and will) be added for other formats, just make an Issue!
 
 ## commands (terminal)
 
@@ -151,7 +151,7 @@ switches Koulouri's mode to `TRACKS`. will display every song Koulouri is aware 
 
 `e`
 
-when in supported views (TRACKS/FAVORITES), applies a filter to the `TRACKS` view, displaying only the selected album.
+when in supported views (TRACKS/FAVORITES/ALBUMS), applies a filter to the `TRACKS` view, displaying only the selected album.
 
 functions like [submit](#submit), taking a track number as input.
 
@@ -220,8 +220,8 @@ favorite tracks are indicated by an asterisk (*) in front of the title.
 Koulouri wouldn't be possible without these projects <3:
 
 - [pydub](https://github.com/jiaaro/pydub) (wav conversion/metadata gathering) - jiaaro
-- [pygame](https://github.com/pygame/pygame) (audio playback) - the PyGame team
-- [ffmpeg](https://github.com/FFmpeg/FFmpeg) (the actuall wav conversion) - the FFmpeg team
+- [pyaudio](https://github.com/CristiFati/pyaudio) (audio playback) - CristiFati/hubert
+- [ffmpeg](https://github.com/FFmpeg/FFmpeg) (wav conversion) - the FFmpeg team
 - curses (tui) - Ken Arnold, AT&T, and others
 - [pypresence](https://github.com/qwertyquerty/pypresence) (Discord RPC) - QwertyQwerty
 - [qt](https://www.qt.io/) (gui framework) - Qt Team
