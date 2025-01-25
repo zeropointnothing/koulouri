@@ -38,7 +38,7 @@ class RPC:
         if 'release-groups' in results and results['release-groups']:
             release_group_id = results['release-groups'][0]['id']
             cover_url = f'https://coverartarchive.org/release-group/{release_group_id}/front-500'  # 500px size
-            return cover_url
+            return {"release": release_group_id, "cover": cover_url}
         else:
             return None
 
@@ -79,7 +79,7 @@ class RPC:
 
     def set_activity(self, title: str, artist: str, album: str):
         # Make sure you are using the same name that you used when uploading the image
-        cover_url = self.get_musicbrainz_album_cover(artist, album)
+        mb = self.get_musicbrainz_album_cover(artist, album)
 
         start_time=time.time() # Using the time that we imported at the start. start_time equals time.
         try:
@@ -87,9 +87,9 @@ class RPC:
                             details=f"{title}",
                             state=artist,
                             start=start_time,
-                            large_image=cover_url,
-                            large_text=album) # We want to apply start time when you run the presence.
+                            large_image=mb["cover"],
+                            large_text=album,
+                            buttons=[{"label": "Album (MusicBrainz)", "url": f"https://musicbrainz.org/release-group/{mb['release']}"}] if mb else None)
         except ServerError:
             self.RPC.close()
             self.__running = False
-            
