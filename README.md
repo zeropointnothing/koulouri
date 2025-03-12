@@ -1,7 +1,9 @@
 # koulouri 
-a lightweight Python music player.
+a lightweight music player built for the user and powered by Python.
 
 simple by design, letting you listen to your music without any distractions or unwanted features.
+
+no AI bloat, no buggy or convoluted UI, and especially no ads. just you, _your_ music, and Koulouri. whether you're rocking out or simply having a chill break, Koulouri will be there for you.
 
 <p align=center>
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/zeropointnothing/koulouri">
