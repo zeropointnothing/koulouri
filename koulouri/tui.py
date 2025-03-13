@@ -1,4 +1,5 @@
 import curses
+import time
 import traceback
 import sys
 from time import sleep
@@ -15,11 +16,151 @@ class Window:
 
         self.h, self.w = self.stdscr.getmaxyx()
 
+        curses.start_color()
+        curses.use_default_colors()
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_WHITE)
+        curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+
+        self.color_red_black = curses.color_pair(1)
+        self.color_green_black = curses.color_pair(2)
+        self.color_black_white = curses.color_pair(3)
+        self.color_white_black = curses.color_pair(4)
+        self.color_yellow_white = curses.color_pair(5)
+        self.color_black_magenta = curses.color_pair(6)
+
         self.__user_inp = ""
         self.__running = True
         self.__mode = "tracks"
         self.__index = -1
         self.__offset = 0
+
+    def __draw_box(self, sx: int, sy: int, ex: int, ey:int):
+        """
+        Draw a box from (`sx`, `sy`) to (`ex`, `ey`).
+
+        Args:
+            sx (int): Starting x.
+            sy (int): Starting y.
+            ex (int): Ending x.
+            ey (int): Ending y.
+        """
+        if sx < 0:
+            sx = 0
+        if sy < 0:
+            sy = 0
+
+        for y in range(sy, ey):
+            if y == sy:
+                try:
+                    self.stdscr.addstr(y, sx, "┌"+"─"*(ex-sx)+"┐")
+                except Exception as e:
+                    raise ValueError(f"tried to render at {sy}-{ey}") from e
+            elif y == ey-1:
+                self.stdscr.addstr(y, sx, "└"+"─"*(ex-sx)+"┘")
+            else:
+                self.stdscr.addstr(y, sx, "│"+" "*(ex-sx)+"│")
+
+    """
+    Playlist (Collection) wizard.
+    
+    Allows the user to add a song into an existing or new playlist.
+    """
+    def playlist_wizard(self, tid: str | None = None):
+        self.stdscr.clear()
+
+        original_playlists = self.data.get_all_playlists()
+        playlists_offset = 0
+        user_chose = 0
+        user_inp = ""
+        characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890- =`!@#$%^&*()_+{}[]:;\"'<,>.?/"
+        max_playlist_length = 0
+        title = " Collection Wizard "
+        for playlist in original_playlists:
+            if len(playlist["name"]) > max_playlist_length:
+                max_playlist_length = len(playlist["name"])
+
+        while self.__running:
+            k = self.stdscr.getch()
+            newh, neww = self.stdscr.getmaxyx()
+            if newh != self.h or neww != self.w:
+                self.stdscr.clear()
+                self.h, self.w = newh, neww
+
+            playlists = original_playlists[playlists_offset:]
+
+            # track = [_ for _ in self.songs if _["id"] == tid]
+
+            if k == -1: # no input
+                pass
+            elif k == 27:
+                self.stdscr.clear()
+                return
+            elif k in [curses.KEY_BACKSPACE, 127]:
+                user_inp = user_inp[:len(user_inp)-1]
+            elif k == curses.KEY_DOWN:
+                playlists_offset += 1
+                playlists_offset %= len(original_playlists)
+            elif k == curses.KEY_UP:
+                playlists_offset -= 1
+                playlists_offset %= len(original_playlists)
+            elif k == ord('\t'):
+                user_inp = playlists[0]["name"]
+            elif k in [curses.KEY_ENTER, 10, 13]:
+                if user_inp:
+                    try:
+                        self.data.get_playlist(user_inp) # check if the playlist exists
+                        if tid is None:
+                            self.data.delete_playlist(user_inp)
+                    except ValueError: # if it doesn't make it first
+                        if tid is not None:
+                            self.data.create_playlist(user_inp)
+                            self.data.toggle_playlist_track(user_inp, tid)
+                elif tid:
+                    self.data.toggle_playlist_track(playlists[user_chose]["name"], tid)
+            elif chr(k) in characters:
+                user_inp += chr(k)
+
+                for i, playlist in enumerate(original_playlists):
+                    if user_inp.lower() in playlist["name"].lower():
+                        playlists_offset = i
+                        break
+
+
+            # render stuff
+            self.__draw_box(0,0, self.w-2, self.h-1)
+            self.stdscr.addstr(0, (self.w//2)-(len(title)//2), title)
+            # self.__draw_box(1box_start_y, box_start_x+max_playlist_length+2, box_start_y+len(playlists)+2)
+            self.__draw_box(0, self.h-4, self.w-2, self.h-1)
+
+            # if len(user_inp) > max_playlist_length:
+            user_inp_display = user_inp[max(0, len(user_inp)-self.w+4):]
+            self.stdscr.addstr(self.h-3, 2, user_inp_display)
+
+            for i, playlist in enumerate(playlists):
+                if i > self.h-6:
+                    continue
+
+
+                if tid in playlist["tracks"]:
+                    self.stdscr.addstr(i+1, 2, playlist["name"], self.color_green_black)
+                elif tid is None and i == user_chose:
+                    self.stdscr.addstr(i+1, 2, playlist["name"], self.color_red_black)
+                elif i == user_chose:
+                    self.stdscr.addstr(i+1, 2, playlist["name"], self.color_black_white)
+                else:
+                    self.stdscr.addstr(i+1, 2, playlist["name"])
+
+            try:
+                self.stdscr.move(1+user_chose, 1+len(playlists[user_chose]["name"]))
+            except IndexError:
+                pass
+
+
+            time.sleep(0.005)
 
     def main(self):
         try:
@@ -31,7 +172,8 @@ class Window:
             paused = False
             insert = False # "insert mode"
             selected_song = None
-            song_filter = ""
+            song_filter = []
+            song_filter_title = ""
             lyric_scroll = True # auto scroll with lyrics
             song_len = 0
 
@@ -49,6 +191,8 @@ class Window:
                     view = [{"id": "", "info": {"artist": _[0], "title": _[1]}} for _ in view] # convert back to dicts we can use
                 elif self.__mode == "favorites":
                     view = [_ for _ in self.songs if self.data.is_favorite(_["id"])]
+                elif self.__mode == "collections":
+                    view = self.data.get_all_playlists()
                 elif self.__mode == "lyrics" and selected_song:
                     view = self.player.fetch_lyrics(selected_song["info"]["path"])
                     # view = [{"artist": "", "title": str(_)} for _ in view]
@@ -56,8 +200,11 @@ class Window:
                     view = []
 
                 # filter view
+                # if self.__mode in ["tracks"] and song_filter:
+                #     view = [_ for _ in view if song_filter == _["info"]["album"]]
                 if self.__mode in ["tracks"] and song_filter:
-                    view = [_ for _ in view if song_filter == _["info"]["album"]]
+                    view = [_ for _ in view if _["id"] in song_filter]
+                    view = sorted(view, key=lambda x: song_filter.index(x["id"]))
 
                 # lyrics rendering:
                 if self.__mode == "lyrics":
@@ -84,6 +231,13 @@ class Window:
                         entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
                         self.stdscr.addstr(i+1, 0, entry_trimmed)
                         self.stdscr.clrtoeol()
+                elif self.__mode == "collections":
+                    # track rendering
+                    for i, playlist in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        entry = f"  {i+self.__offset}: {playlist["name"]} ({len(playlist["tracks"])})"
+                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
+                        self.stdscr.addstr(i+1, 0, entry_trimmed)
+                        self.stdscr.clrtoeol()
                 else:
                     # track rendering
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
@@ -100,11 +254,11 @@ class Window:
                         self.stdscr.clrtoeol()
 
                 if insert and song_filter:
-                    userinpstr = f"[E|I]: {song_filter}/{self.__user_inp}"
+                    userinpstr = f"[E|I]: {song_filter_title}/{self.__user_inp}"
                 elif insert:
                     userinpstr = f"[I]: {self.__user_inp}"
                 elif song_filter:
-                    userinpstr = f"[E]: {song_filter}/{self.__user_inp}"
+                    userinpstr = f"[E]: {song_filter_title}/{self.__user_inp}"
                 else:
                     userinpstr = f": {self.__user_inp}"
                 # userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
@@ -147,6 +301,14 @@ class Window:
                                 self.queue.extend(sorted(album, key=lambda d: d["info"]["track"]))
                             else:
                                 self.queue[self.__index+1:] = sorted(album, key=lambda d: d["info"]["track"]) + self.queue[self.__index+1:]
+                        elif k in range(len(view)) and self.__mode == "collections":
+                            contained_songs = self.data.get_playlist(view[k]["name"])
+                            playlist = [_ for _ in self.songs if _["id"] in contained_songs["tracks"]]
+
+                            if not insert:
+                                self.queue.extend(sorted(playlist, key=lambda x: contained_songs["tracks"].index(x["id"])))
+                            else:
+                                self.queue[self.__index+1:] = sorted(playlist, key=lambda x: contained_songs["tracks"].index(x["id"])) + self.queue[self.__index+1:]
                         else:
                             continue
                         self.stdscr.clear()
@@ -180,16 +342,46 @@ class Window:
                     self.__mode = "favorites"
                     self.__offset = 0
                     self.stdscr.clear()
+                elif chr(k) == "c":
+                    if not self.__user_inp and selected_song:
+                        self.playlist_wizard(selected_song["id"])
+                    elif self.__mode in ["tracks", "favorites"] and (self.__user_inp and int(self.__user_inp) in range(len(view))):
+                        self.playlist_wizard(view[int(self.__user_inp)]["id"])
+                    self.__user_inp = ""
+                elif chr(k) == "r":
+                    self.playlist_wizard()
+                elif chr(k) == "C":
+                    self.__mode = "collections"
+                    self.__offset = 0
+                    self.stdscr.clear()
+
+                    song_filter = []
+                    song_filter_title = ""
                 elif chr(k) == "e":
                     if not self.__user_inp:
-                        song_filter = ""
+                        song_filter = []
                     elif self.__mode == "tracks":
-                        song_filter = view[int(self.__user_inp)]["info"]["album"]
+                        target = view[int(self.__user_inp)]["info"]["album"]
+                        song_filter = [_["id"] for _ in sorted(self.songs, key=lambda d: d["info"]["track"]) if _["info"]["album"] == target]
+                        song_filter_title = target
+                        # song_filter = view[int(self.__user_inp)]["info"]["album"]
                     elif self.__mode == "albums":
-                        song_filter = view[int(self.__user_inp)]["info"]["title"]
+                        target = view[int(self.__user_inp)]["info"]["title"]
+                        song_filter = [_["id"] for _ in sorted(self.songs, key=lambda d: d["info"]["track"]) if _["info"]["album"] == target]
+                        song_filter_title = target
+                        # song_filter = view[int(self.__user_inp)]["info"]["title"]
                         self.__mode = "tracks" # the only view that will properly show tracks
                     elif self.__mode == "favorites":
-                        song_filter = view[int(self.__user_inp)]["info"]["album"]
+                        target = view[int(self.__user_inp)]["info"]["album"]
+                        song_filter = [_["id"] for _ in self.songs if _["info"]["album"] == target]
+                        song_filter_title = target
+                        # song_filter = view[int(self.__user_inp)]["info"]["album"]
+                        self.__mode = "tracks"
+                    elif self.__mode == "collections":
+                        target = view[int(self.__user_inp)]
+                        song_filter = target["tracks"]
+                        song_filter_title = target["name"]
+
                         self.__mode = "tracks"
 
                     self.__user_inp = ""

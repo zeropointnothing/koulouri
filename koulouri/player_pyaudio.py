@@ -265,7 +265,8 @@ class Data:
 
         if not os.path.exists(self.__path):
             self.__data = {
-                "favorites": []
+                "favorites": [],
+                "playlists": []
             }
             self.__sync()
         else:
@@ -276,7 +277,7 @@ class Data:
         Sync current memory data to disk.
         """
         with open(self.__path, "w") as f:
-            json.dump(self.__data, f)
+            json.dump(self.__data, f, indent=4)
     def __load(self):
         """
         Load disk to memory.
@@ -339,6 +340,78 @@ class Data:
         else:
             return False
 
+    def create_playlist(self, name: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        if name in [_.get("name", "Unnamed") for _ in playlists]:
+            raise ValueError(f"Playlist with name {name} already exists!")
+        else:
+            playlists.append({
+                "name": name,
+                "tracks": []
+            })
+            self.__data["playlists"] = playlists
+            self.__sync()
+
+    def delete_playlist(self, name: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        if name not in [_.get("name", "Unnamed") for _ in playlists]:
+            raise ValueError(f"Playlist with name {name} does not exist!")
+        else:
+            playlists.remove([_ for _ in playlists if _["name"] == name][0])
+            self.__data["playlists"] = playlists
+            self.__sync()
+
+    def get_playlist(self, name: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        for playlist in playlists:
+            if playlist.get("name", "Unnamed") == name:
+                return playlist
+
+        raise ValueError(f"Playlist with name {name} does not exist!")
+
+    def get_all_playlists(self) -> list[dict]:
+        return self.__data.get("playlists", [])
+
+    def append_playlist_track(self, name: str, tid: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        for playlist in playlists:
+            if playlist.get("name", "Unnamed") == name:
+                if tid not in playlist["tracks"]:
+                    playlist["tracks"].append(tid)
+                    self.__sync()
+                    return
+                else:
+                    return
+
+    def remove_playlist_track(self, name, tid: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        for playlist in playlists:
+            if playlist.get("name", "Unnamed") == name:
+                if tid in playlist["tracks"]:
+                    playlist["tracks"].remove(tid)
+                    self.__sync()
+                    return
+                else:
+                    return
+
+    def toggle_playlist_track(self, name, tid: str):
+        playlists: list[dict] = self.__data.get("playlists", [])
+
+        for playlist in playlists:
+            if playlist.get("name", "Unnamed") == name:
+                if tid in playlist["tracks"]:
+                    playlist["tracks"].remove(tid)
+                    self.__sync()
+                    return
+                else:
+                    playlist["tracks"].append(tid)
+                    self.__sync()
+                    return
 
 # test = Player()
 
