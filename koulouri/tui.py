@@ -99,7 +99,7 @@ class Window:
             elif k == 27:
                 self.stdscr.clear()
                 return
-            elif k in [curses.KEY_BACKSPACE, 127]:
+            elif k in [curses.KEY_BACKSPACE, 127, 8]:
                 user_inp = user_inp[:len(user_inp)-1]
             elif k == curses.KEY_DOWN:
                 playlists_offset += 1
@@ -208,7 +208,7 @@ class Window:
 
                 # CONTROLS
 
-                if k in [curses.KEY_BACKSPACE, 127]:
+                if k in [curses.KEY_BACKSPACE, 127, 8]:
                     self.__user_inp = self.__user_inp[:len(self.__user_inp)-1]
                 elif k == curses.KEY_DOWN and view:
                     self.__offset += 1
