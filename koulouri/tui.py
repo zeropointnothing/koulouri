@@ -371,6 +371,7 @@ class Window:
                         self.player.pause()
                     else:
                         self.player.resume()
+                curses.flushinp() # once we've handled input, we don't need anything else here
 
                 self.__draw_box(0,0, self.w-2, self.h-1)
 
