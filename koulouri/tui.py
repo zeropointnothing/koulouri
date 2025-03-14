@@ -206,65 +206,6 @@ class Window:
                     view = [_ for _ in view if _["id"] in song_filter]
                     view = sorted(view, key=lambda x: song_filter.index(x["id"]))
 
-                # lyrics rendering:
-                if self.__mode == "lyrics":
-                    now_at = self.player.get_time()
-                    lyric_times = []
-                    for lyric in view:
-                        lyric_at = float(lyric["tsec"]+(lyric["tmin"]*60))+float(lyric["tmil"])
-                        tscore =  now_at - lyric_at
-                        if tscore >= 0:
-                            lyric_times.append(tscore)
-
-                    # keep the current lyric in the center of the view
-                    if lyric_times and lyric_scroll:
-                        min_lyric = lyric_times.index(min(lyric_times))
-                        if min_lyric >= (self.h-3)//2:
-                            self.__offset = min_lyric - ((self.h-3)//2)
-
-                    for i, line in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                        entry = f"{line["lyric"]}"
-
-                        if lyric_times and line == view[lyric_times.index(min(lyric_times))]:
-                            entry = "~ " + entry
-
-                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                        self.stdscr.addstr(i+1, 0, entry_trimmed)
-                        self.stdscr.clrtoeol()
-                elif self.__mode == "collections":
-                    # track rendering
-                    for i, playlist in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                        entry = f"  {i+self.__offset}: {playlist["name"]} ({len(playlist["tracks"])})"
-                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                        self.stdscr.addstr(i+1, 0, entry_trimmed)
-                        self.stdscr.clrtoeol()
-                else:
-                    # track rendering
-                    for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
-                        entry = f"{i+self.__offset}: {song["info"]["artist"]} - {song["info"]["title"]}"
-                        if selected_song and (selected_song == song or selected_song["info"]["album"] == song["info"]["title"]):
-                            if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
-                                entry = "  " + entry
-                            else:
-                                entry = "~ " + entry
-                        else:
-                            entry = "  " + entry
-                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                        self.stdscr.addstr(i+1, 0, entry_trimmed)
-                        self.stdscr.clrtoeol()
-
-                if insert and song_filter:
-                    userinpstr = f"[E|I]: {song_filter_title}/{self.__user_inp}"
-                elif insert:
-                    userinpstr = f"[I]: {self.__user_inp}"
-                elif song_filter:
-                    userinpstr = f"[E]: {song_filter_title}/{self.__user_inp}"
-                else:
-                    userinpstr = f": {self.__user_inp}"
-                # userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
-                self.stdscr.addstr(self.h-3, 0, userinpstr)
-                self.stdscr.clrtoeol()
-
                 # CONTROLS
 
                 if k in [curses.KEY_BACKSPACE, 127]:
@@ -323,31 +264,37 @@ class Window:
                     self.__mode = "queue"
                     self.__offset = 0
                     self.stdscr.clear()
+                    continue
                 elif chr(k) == "t":
                     self.__mode = "tracks"
                     self.__offset = 0
                     self.stdscr.clear()
+                    continue
                 elif chr(k) == "a":
                     self.__mode = "albums"
                     self.__offset = 0
                     self.stdscr.clear()
 
                     song_filter = ""
+                    continue
                 elif chr(k) == "l":
                     self.__mode = "lyrics"
                     lyric_scroll = True # reset auto scroll
                     self.__offset = 0
                     self.stdscr.clear()
+                    continue
                 elif chr(k) == "f":
                     self.__mode = "favorites"
                     self.__offset = 0
                     self.stdscr.clear()
+                    continue
                 elif chr(k) == "c":
                     if not self.__user_inp and selected_song:
                         self.playlist_wizard(selected_song["id"])
                     elif self.__mode in ["tracks", "favorites"] and (self.__user_inp and int(self.__user_inp) in range(len(view))):
                         self.playlist_wizard(view[int(self.__user_inp)]["id"])
                     self.__user_inp = ""
+                    continue
                 elif chr(k) == "r":
                     self.playlist_wizard()
                 elif chr(k) == "C":
@@ -357,6 +304,7 @@ class Window:
 
                     song_filter = []
                     song_filter_title = ""
+                    continue
                 elif chr(k) == "e":
                     if not self.__user_inp:
                         song_filter = []
@@ -387,6 +335,7 @@ class Window:
                     self.__user_inp = ""
                     self.__offset = 0
                     self.stdscr.clear()
+                    continue
                 elif chr(k) == "*":
                     if not self.__user_inp and selected_song:
                         self.data.toggle_favorite(selected_song["id"])
@@ -423,6 +372,74 @@ class Window:
                     else:
                         self.player.resume()
 
+                self.__draw_box(0,0, self.w-2, self.h-1)
+
+                # lyrics rendering:
+                if self.__mode == "lyrics":
+                    now_at = self.player.get_time()
+                    lyric_times = []
+                    for lyric in view:
+                        lyric_at = float(lyric["tsec"]+(lyric["tmin"]*60))+float(lyric["tmil"])
+                        tscore =  now_at - lyric_at
+                        if tscore >= 0:
+                            lyric_times.append(tscore)
+
+                    # keep the current lyric in the center of the view
+                    if lyric_times and lyric_scroll:
+                        min_lyric = lyric_times.index(min(lyric_times))
+                        if min_lyric >= (self.h-3)//2:
+                            self.__offset = min_lyric - ((self.h-3)//2)
+
+                    for i, line in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        entry = f"{line["lyric"]}"
+
+                        if lyric_times and line == view[lyric_times.index(min(lyric_times))]:
+                            entry = "~ " + entry
+
+                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
+                        self.stdscr.addstr(i+1, 0, entry_trimmed)
+                        self.stdscr.clrtoeol()
+                elif self.__mode == "collections":
+                    # track rendering
+                    for i, playlist in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        try:
+                            entry = f"{i+self.__offset}: {playlist["name"]} ({len(playlist["tracks"])})"
+                        except:
+                            raise ValueError(f"playlist: {playlist}")
+                        entry_trimmed = entry[:self.w-5] + (entry[self.w-5:] and '...')
+                        self.stdscr.addstr(i+1, 3, entry_trimmed)
+                        self.stdscr.clrtoeol()
+                else:
+                    # track rendering
+                    for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
+                        entry = f"{i+self.__offset}: {song["info"]["artist"]} - {song["info"]["title"]}"
+                        if selected_song and (selected_song == song or selected_song["info"]["album"] == song["info"]["title"]):
+                            if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
+                                entry = "  " + entry
+                            else:
+                                entry = "~ " + entry
+                        else:
+                            entry = "  " + entry
+                        entry_trimmed = entry[:self.w-5] + (entry[self.w-5:] and '...')
+                        self.stdscr.addstr(i+1, 1, entry_trimmed)
+                        # self.stdscr.clrtoeol()
+
+                if insert and song_filter:
+                    userinpstr = f"[E|I]: {song_filter_title}/{self.__user_inp}"
+                elif insert:
+                    userinpstr = f"[I]: {self.__user_inp}"
+                elif song_filter:
+                    userinpstr = f"[E]: {song_filter_title}/{self.__user_inp}"
+                else:
+                    userinpstr = f": {self.__user_inp}"
+
+                self.stdscr.move(self.h-1, 0)
+                self.stdscr.clrtoeol()
+                # userinpstr = f": {self.__user_inp}" if not insert else f"[I]: {self.__user_inp}"
+                self.stdscr.addstr(self.h-3, 1, userinpstr)
+                # self.stdscr.clrtoeol()
+
+
                 if (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index < len(self.queue)-1):
                     self.__index += 1
                     selected_song = self.queue[self.__index]
@@ -436,12 +453,11 @@ class Window:
 
                 try:
                     volume = self.player.volume
-                    title_str = f"koulouri  / [{volume}%] /  {self.__mode}"
+                    title_str = f"[ koulouri  / [{volume}%] /  {self.__mode} ]"
                     title_mid = (self.w//2)-(len(title_str)//2)
-                    self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it
-                    self.stdscr.clrtoeol()
+                    # self.stdscr.move(0, 0) # ensure title is cleared, since it may have left behind text in front of it
+                    # self.stdscr.clrtoeol()
                     self.stdscr.addstr(0, title_mid, title_str)
-                    self.stdscr.refresh()
                 except:
                     pass
 
@@ -453,19 +469,19 @@ class Window:
                         is_favorite = "*" if self.data.is_favorite(selected_song["id"]) else ""
                         symbol = ">" if not paused else "#"
                         prog_bar = "="*round((self.w-14)*((now_at)/song_len))
-                        now_playing = f"{self.__index+1} of {len(self.queue)}, {is_favorite}{selected_song["info"]["artist"]} - {selected_song["info"]["title"]}"
-                        nplaying_trimmed = now_playing[:self.w-3] + (now_playing[self.w-3:] and '...')
+                        now_playing = f"{self.__index+1} of {len(self.queue)}, {is_favorite}{selected_song["info"]["artist"]} - {selected_song["info"]["title"]} "
+                        nplaying_trimmed = now_playing[:self.w-5] + (now_playing[self.w-5:] and '...')
                         # prog_bar = self.player.mixer.get_pos()/1000
                         final_prog = f"{round(now_at//60):02d}:{round(now_at%60):02d}-{round(song_len//60):02d}:{round(song_len%60):02d} {symbol}{prog_bar}"
-                        self.stdscr.addstr(self.h-1, 0, final_prog)
-                        self.stdscr.clrtoeol()
                         self.stdscr.addstr(self.h-2, 0, nplaying_trimmed)
-                        self.stdscr.clrtoeol()
+                        self.stdscr.addstr(self.h-1, 0, final_prog)
+                        # self.stdscr.clrtoeol()
+                        # self.stdscr.clrtoeol()
                     except: # terminal is most likely larger/smaller than we think, nothing to worry about
                         # selected_song = None
                         pass
-
                     self.stdscr.refresh()
+
         except KeyboardInterrupt:
             self.player.stop()
             # restore terminal to normal state
