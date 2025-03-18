@@ -20,7 +20,7 @@ class RPC:
 
         self.__running = False
 
-    def get_musicbrainz_album_cover(self, artist, album):
+    def get_musicbrainz_album_cover(self, artist, album) -> dict:
         """
         Fetch a url to the album cover from coverartarchive, if any. 
         """
@@ -40,7 +40,7 @@ class RPC:
             cover_url = f'https://coverartarchive.org/release-group/{release_group_id}/front-500'  # 500px size
             return {"release": release_group_id, "cover": cover_url}
         else:
-            return None
+            return {}
 
     def __watch_loop(self):
         title = self.title
@@ -87,7 +87,7 @@ class RPC:
                             details=f"{title}",
                             state=artist,
                             start=start_time,
-                            large_image=mb["cover"],
+                            large_image=mb.get("cover", None),
                             large_text=album,
                             buttons=[{"label": "Album (MusicBrainz)", "url": f"https://musicbrainz.org/release-group/{mb['release']}"}] if mb else None)
         except ServerError:
