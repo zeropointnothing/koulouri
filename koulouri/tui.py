@@ -397,9 +397,8 @@ class Window:
                         if lyric_times and line == view[lyric_times.index(min(lyric_times))]:
                             entry = "~ " + entry
 
-                        entry_trimmed = entry[:self.w-3] + (entry[self.w-3:] and '...')
-                        self.stdscr.addstr(i+1, 0, entry_trimmed)
-                        self.stdscr.clrtoeol()
+                        entry_trimmed = entry[:self.w-5] + (entry[self.w-5:] and '...')
+                        self.stdscr.addstr(i+1, 3, entry_trimmed)
                 elif self.__mode == "collections":
                     # track rendering
                     for i, playlist in enumerate(view[self.__offset:self.__offset+self.h-4]):
@@ -414,7 +413,7 @@ class Window:
                     # track rendering
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
                         entry = f"{i+self.__offset}: {song["info"]["artist"]} - {song["info"]["title"]}"
-                        if selected_song and (selected_song == song or selected_song["info"]["album"] == song["info"]["title"]):
+                        if selected_song and selected_song == song or (selected_song and self.__mode == "albums" and song["info"]["title"] == selected_song["info"]["album"]):
                             if self.__mode == "queue" and (self.__index-self.__offset) != i: # mark only the current playing instance
                                 entry = "  " + entry
                             else:
