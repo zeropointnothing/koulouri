@@ -111,10 +111,13 @@ class Window:
                 user_inp = playlists[0]["name"]
             elif k in [curses.KEY_ENTER, 10, 13]:
                 if user_inp:
+                    # raise ValueError(f"{user_inp}, {tid}, {user_chose}")
                     try:
                         self.data.get_playlist(user_inp) # check if the playlist exists
-                        if tid is None:
+                        if tid is None: # assume we want to delete the playlist if no TID is supplied
                             self.data.delete_playlist(user_inp)
+                        else:
+                            self.data.toggle_playlist_track(user_inp, tid)
                     except ValueError: # if it doesn't make it first
                         if tid is not None:
                             self.data.create_playlist(user_inp)
