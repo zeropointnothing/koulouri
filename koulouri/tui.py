@@ -175,6 +175,7 @@ class Window:
             song_filter = []
             song_filter_title = ""
             lyric_scroll = True # auto scroll with lyrics
+            viewing_collection = False
             song_len = 0
 
             while self.__running:
@@ -295,8 +296,6 @@ class Window:
                         self.playlist_wizard(view[int(self.__user_inp)]["id"])
                     self.__user_inp = ""
                     continue
-                elif chr(k) == "r":
-                    self.playlist_wizard()
                 elif chr(k) == "C":
                     self.__mode = "collections"
                     self.__offset = 0
@@ -305,9 +304,16 @@ class Window:
                     song_filter = []
                     song_filter_title = ""
                     continue
+                elif chr(k) == "r":
+                    if viewing_collection and self.__user_inp:
+                        self.data.remove_playlist_track(song_filter_title, view[int(self.__user_inp)]["id"])
+                        self.__user_inp = ""
+                    else:
+                        self.playlist_wizard()
                 elif chr(k) == "e":
                     if not self.__user_inp:
                         song_filter = []
+                        viewing_collection = False
                     elif self.__mode == "tracks":
                         target = view[int(self.__user_inp)]["info"]["album"]
                         song_filter = [_["id"] for _ in sorted(self.songs, key=lambda d: d["info"]["track"]) if _["info"]["album"] == target]
@@ -331,6 +337,7 @@ class Window:
                         song_filter_title = target["name"]
 
                         self.__mode = "tracks"
+                        viewing_collection = True
 
                     self.__user_inp = ""
                     self.__offset = 0
