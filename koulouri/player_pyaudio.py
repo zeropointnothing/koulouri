@@ -100,8 +100,8 @@ class Player:
                     adjusted_sample = max(min(adjusted_sample, 32767), -32768)
                     adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
 
-                self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
                 self.__audio_stream.write(bytes(adjusted_data))
+                self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
                 data = wf.readframes(1024)
             else:
                 try:
