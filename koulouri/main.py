@@ -13,6 +13,7 @@ parser.add_argument("-r", "--refresh", help="Refresh Koulouri's song cache.", ac
 parser.add_argument("-c", "--curses", help="Run the Curses-based frontend instead.", action="store_true")
 parser.add_argument("-g", "--gui", help="Run the Qt-based frontend instead.", action="store_true")
 parser.add_argument("-v", "--version", help="Print Koulouri's version, then exit.", action="store_true")
+parser.add_argument("-d", "--discord", help="Enable Discord RPC. Requires access to MusicBrainz for album art.", action="store_true")
 parser.add_argument("--album", help="Set supported commands to Album Mode.", action="store_true")
 parser.add_argument("--add-source", help="Add a folder to your library.", action="append")
 
@@ -80,11 +81,14 @@ if __name__ == "__main__":
 
     if args.curses:
         from tui import Window
-        try:
-            from discord import RPC
-            rpc = RPC()
-            plr = Player(rpc)
-        except ModuleNotFoundError: # optional RPC modules not installed
+        if args.discord:
+            try:
+                from discord import RPC
+                rpc = RPC()
+                plr = Player(rpc)
+            except ModuleNotFoundError: # optional RPC modules not installed
+                plr = Player()
+        else:
             plr = Player()
         import curses
 

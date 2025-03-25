@@ -34,7 +34,7 @@ class RPC:
             'limit': 1
         }
         headers = {
-            'User-Agent': "Koulouri Music Player/2.1.0"
+            'User-Agent': "Koulouri Music Player/2.1.0 (https://github.com/zeropointnothing/koulouri)"
         }
         response = requests.get(search_url, params=params, headers=headers)
         results = response.json()
