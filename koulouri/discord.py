@@ -1,3 +1,5 @@
+import json
+
 from pypresence import Presence, ActivityType
 from pypresence.exceptions import PipeClosed, ServerError
 import time
@@ -31,8 +33,14 @@ class RPC:
             'fmt': 'json',
             'limit': 1
         }
-        response = requests.get(search_url, params=params)
+        headers = {
+            'User-Agent': "Koulouri Music Player/2.1.0"
+        }
+        response = requests.get(search_url, params=params, headers=headers)
         results = response.json()
+        #
+        # with open("sample.json", "r") as f:
+        #     results = json.loads(f.read().replace("'", "\""))
 
         # Get the album's MusicBrainz ID
         if 'release-groups' in results and results['release-groups']:
