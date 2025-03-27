@@ -1,3 +1,5 @@
+import hashlib
+
 import pydub, pydub.utils, pyaudio, wave
 import os, sys
 import threading, time
@@ -136,26 +138,44 @@ class Player:
 
         return {"path": path, "type": type, "duration": duration, "artist": artist, "album_artist": album_artist, "album": album, "title": title, "genre": genre, "track": track}
     
-    def play(self, path: str, input_format: str):
+    def play(self, path: str, input_format: str, preserve: bool = False):
         """
         Load a file into memory and start playback.
 
         Automatically converts the input file into a wav, storing it temporarily inside of
         the system's temp folder via `tempfile`.
+
+        If 'preserve' is set, the converted file will be saved to a cache for later recall
+        instead.
         """
-        tmp = NamedTemporaryFile(prefix="koulouri-conv_")
-
-        if sys.platform == "win32":
-            tmp.delete = False
-            tmp.close()
-
-        self.__file = tmp
-
-        audio = pydub.AudioSegment.from_file(path, input_format).set_channels(2).set_sample_width(2)
-        self.__audio_samprate = audio.frame_rate
         info = self.get_info(path, input_format)
 
-        audio.export(self.__file.name, "wav")
+        if preserve:
+            tid = hashlib.sha256(f"{info["artist"]}{info["title"]}".encode()).hexdigest()
+            if not os.path.isdir("./cache"):
+                os.makedirs("./cache")
+                with open("./cache/README.txt", "w") as f:
+                    f.write("Here be dragons!\n\nIn most cases, Koulouri should handle all files within this "
+                            "directory. You likely don't need to change anything.\n\nIf you must, only delete files!")
+
+            if not os.path.exists(f"cache/{tid}.wav"):
+                audio = pydub.AudioSegment.from_file(path, input_format).set_channels(2).set_sample_width(2)
+                self.__audio_samprate = audio.frame_rate
+                audio.export(f"cache/{tid}.wav", "wav")
+
+            self.__file = open(f"cache/{tid}.wav", "rb")
+        else:
+            tmp = NamedTemporaryFile(prefix="koulouri-conv_")
+
+            if sys.platform == "win32":
+                tmp.delete = False
+                tmp.close()
+
+            self.__file = tmp
+
+            audio = pydub.AudioSegment.from_file(path, input_format).set_channels(2).set_sample_width(2)
+            self.__audio_samprate = audio.frame_rate
+            audio.export(self.__file.name, "wav")
 
         wf = wave.open(self.__file.name, "rb") # we shouldn't be reading headers
 
@@ -266,11 +286,92 @@ class Data:
         if not os.path.exists(self.__path):
             self.__data = {
                 "favorites": [],
+                "preferences": {
+                    "cache_keepConversions": False
+                },
                 "playlists": []
             }
             self.__sync()
         else:
             self.__data = self.__load()
+
+        self.__preferences = self.Preferences(self.__data["preferences"])
+        self.__preferences.freeze()
+
+    @property
+    def preferences(self):
+        """
+        Get user preferences.
+        """
+        return self.__preferences
+
+    class Preferences(dict):
+        """
+        Modified dictionary class that allows for the storage of user preferences, all while preventing
+        further (potentially breaking) edits via freezing.
+
+        Once frozen, two types of data are stored:
+
+        FROZEN: Frozen data can be read from, but not modified. This is to protect against broken or odd Koulouri
+        behavior caused by changing a value mid-session. These variables can be changed "upon restart" however.
+
+        THAWED: Thawed data has no restrictions, acting like typical dict keys.
+
+        Once frozen, new values are treated as "FROZEN", preventing any changes whatsoever. Additionally, data must be
+        set to "THAWED" before the database is frozen.
+        """
+        def __init__(self, *args, **kwargs):
+            # Preferences need to be frozen to avoid broken behavior.
+            self.__frozen = False
+            self.__thaw = []
+
+            super().__init__(*args, **kwargs)
+
+        @property
+        def _frozen(self):
+            """
+            Whether the internal database is frozen.
+            """
+            return self.__frozen
+
+        @property
+        def _thawed(self):
+            """
+            Attributes that should be kept "thawed".
+            """
+            return self.__thaw
+
+        # prevent dict modification if we're supposed to be frozen
+        def __setitem__(self, key, value):
+            if getattr(self, "_frozen", False) and key not in getattr(self, "_thawed", []):
+                raise AttributeError(f"Cannot modify key '{key}', as database is frozen.")
+
+            super().__setitem__(key, value)
+
+        def freeze(self):
+            """
+            Freeze the preference database.
+
+            Once frozen, any values marked as freezable will throw an AttributeError upon
+            further attempts to edit them. The database cannot be unfrozen after this is
+            called.
+            """
+            self.__frozen = True
+
+        def set_thawed(self, key: str):
+            """
+            Make a value "thawed", allowing it to change even after
+            the internal database is frozen.
+            """
+
+            if self.__frozen:
+                raise AttributeError(f"Unable to modify a frozen database.")
+            try:
+                self[key]
+            except KeyError as e:
+                raise NameError(f"No such key '{key}' exists within current scope.") from e
+
+            self.__thaw.append(key)
 
     def __sync(self):
         """

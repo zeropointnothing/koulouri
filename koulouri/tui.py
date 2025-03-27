@@ -418,7 +418,6 @@ class Window:
                             raise ValueError(f"playlist: {playlist}")
                         entry_trimmed = entry[:self.w-5] + (entry[self.w-5:] and '...')
                         self.stdscr.addstr(i+1, 3, entry_trimmed)
-                        self.stdscr.clrtoeol()
                 else:
                     # track rendering
                     for i, song in enumerate(view[self.__offset:self.__offset+self.h-4]):
@@ -454,7 +453,7 @@ class Window:
                     self.__index += 1
                     selected_song = self.queue[self.__index]
                     self.player.stop() # ensure that we stop anything currently playing
-                    self.player.play(selected_song["info"]["path"], selected_song["info"]["type"])
+                    self.player.play(selected_song["info"]["path"], selected_song["info"]["type"], self.data.preferences["cache_keepConversions"])
                     song_len = selected_song["info"]["duration"]
                     paused = False
                 elif (not self.player.is_playing()[1] and not paused) and (self.queue and self.__index == len(self.queue)-1):
