@@ -25,7 +25,7 @@ class Player:
         self.__playing = False # playing audio
         self.__paused = False
         self.__file = None
-        self.__time = 0
+        self.__chunk_total = 0
         self.__seek_to = 0
         self.__offset_time = 0 # visual offset
 
@@ -36,6 +36,8 @@ class Player:
         self.__audio_stream = None
         self.__audio_thread = None
         self.__audio_samprate = 44100
+        self.__audio_channels = 2
+        self.__audio_sampwidth = 0
 
     @property
     def volume(self) -> int:
@@ -59,16 +61,19 @@ class Player:
 
         Automatically adjusts the volume of the audio before writing it into the stream.
         """
-        bytes_per_sample = wf.getsampwidth()
-        channels = wf.getnchannels()
-        self.__time = 0 # reset timer
+        # set these globally, so we can use them elsewhere
+        self.__audio_sampwidth = wf.getsampwidth()
+        self.__audio_channels = wf.getnchannels()
+        self.__audio_samprate = wf.getframerate()
+
+        self.__chunk_total = 0
 
         data = wf.readframes(1024)
 
         while self.__playing:
             if self.__seek_to:
                 # Calculate the byte position from the time in seconds
-                byte_position = int(self.__seek_to * bytes_per_sample * channels * self.__audio_samprate)
+                byte_position = int(self.__seek_to * self.__audio_sampwidth * self.__audio_channels * self.__audio_samprate)
                 
                 if byte_position < 0: # can't go under 0!
                     pass
@@ -77,10 +82,10 @@ class Player:
                 else:
                     # Seek the file to the calculated byte position
                     # the wave module expects frame position, so some extra math is needed.
-                    wf.setpos(byte_position // (bytes_per_sample * channels))
+                    wf.setpos(byte_position // (self.__audio_sampwidth * self.__audio_channels))
                     
-                    # Update the time to reflect the new position
-                    self.__time = self.__seek_to
+                    # Update the chunk total to reflect the new position
+                    self.__chunk_total = byte_position
                 self.__seek_to = 0
 
             if self.__paused:
@@ -103,7 +108,7 @@ class Player:
                     adjusted_data.extend(adjusted_sample.to_bytes(2, byteorder='little', signed=True))
 
                 self.__audio_stream.write(bytes(adjusted_data))
-                self.__time += len(data) / (bytes_per_sample * channels * self.__audio_samprate) # update timer
+                self.__chunk_total += len(data)
                 data = wf.readframes(1024)
             else:
                 try:
@@ -231,7 +236,11 @@ class Player:
         self.__seek_to = to
     
     def get_time(self) -> float:
-        return self.__time
+        """
+        Calculate the current playback time via the current chunk position.
+        """
+        return self.__chunk_total / (self.__audio_sampwidth * self.__audio_channels * self.__audio_samprate)
+        # return self.__time
     
     def fetch_lyrics(self, path: str):
         lyric_file = path.split(".")[0]+".lrc"
