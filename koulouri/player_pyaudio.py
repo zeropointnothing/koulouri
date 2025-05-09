@@ -278,7 +278,7 @@ class Player:
         else:
             act = False
 
-        return (self.__playing, act)
+        return (self.__playing and not self.__paused), act
 
     def is_active(self) -> bool: # compat?
         if self.__audio_thread:
